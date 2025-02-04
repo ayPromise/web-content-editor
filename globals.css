@@ -1,3 +1,46 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*Editor*/
+#editor>*{
+    @apply relative transition-[background-color] py-1
+}
+
+.empty{
+    @apply before:content-[attr(data-placeholder)] before:absolute text-gray-400
+}
+
+.dragged{
+    @apply bg-orange-100
+}
+
+.add-before::before{
+    @apply content-[""] block h-[4px] left-0 right-0 top-[-4px] bg-orange-100 absolute
+}
+
+.add-after::after{
+    @apply content-[""] block h-[4px] left-0 right-0 bottom-[-4px] bg-orange-100 absolute
+}
+
+.add-between::after {
+    @apply content-[""] block h-[4px] left-0 right-0 bottom-[-20px] bg-orange-100 absolute
+}
+
+.add-inside::after{
+    @apply content-[""] block h-full w-[4px] left-0 bottom-0 bg-orange-100 absolute z-[-1];
+    left:var(--drop-left, 0px);
+}
+
+.dragButton{
+    @apply left-[5px] absolute w-[40px] h-[22px] cursor-grab flex items-center justify-center transition-opacity duration-500
+}
+
+
+
+
+
+/*Control Panel*/
+.stylingButton{
+    @apply p-2 cursor-pointer hover:bg-slate-100 transition-[background-color] duration-300 rounded
+}
