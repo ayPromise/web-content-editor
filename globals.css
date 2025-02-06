@@ -42,5 +42,9 @@
 
 /*Control Panel*/
 .stylingButton{
-    @apply p-2 cursor-pointer hover:bg-slate-100 transition-[background-color] duration-300 rounded
+    @apply p-2 cursor-pointer hover:bg-slate-300 transition-[background-color] duration-300 rounded
 }
+
+.active{
+    @apply bg-slate-200
+}   
