@@ -1,5 +1,6 @@
 "use client"
 
+import { restoreSelection } from '@/utils/restoreSelection';
 import React, { useEffect, useRef, useState } from 'react'
 
 const DragDropHorizontalIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -15,7 +16,14 @@ interface DropPositionProps {
     dropDirection?: "left" | "right"
 }
 
-const Editor: React.FC = () => {
+interface EditorProps {
+    textHTML: string
+    handleTextChange: (newHtml: string) => void
+    handleTextSelect: () => void
+}
+
+const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) => {
+
     // ref на едітор для подальшого додавання елементів та івентів до нього
     const editorRef = useRef<HTMLDivElement>(null)
     const selection = window.getSelection();
@@ -284,7 +292,7 @@ const Editor: React.FC = () => {
 
             // now we select the dropped text but in a new place
             const newTextNode = dropPosition.fromElement.childNodes[0] as Text
-            const newRange = document.createRange();
+
             // to remain selection if placing happens in itself
             const nothingChanged = draggedText === dropPosition.fromElement.textContent;
 
@@ -302,10 +310,13 @@ const Editor: React.FC = () => {
 
             const endRange = Math.min(insertIndex + draggedText.length, newTextNode.length);
 
-            newRange.setStart(newTextNode, startRange);
-            newRange.setEnd(newTextNode, endRange);
-            selection?.removeAllRanges();
-            selection?.addRange(newRange);
+            restoreSelection(dropPosition.fromElement as HTMLElement, startRange, endRange)
+
+
+            // we save changes in popped stated
+            if (editorRef.current)
+                handleTextChange(editorRef.current.innerHTML)
+
             return
         }
 
@@ -339,6 +350,11 @@ const Editor: React.FC = () => {
             dropPosition.fromElement.after(draggedElement)
         }
 
+
+        // we save changes in popped stated
+        if (editorRef.current)
+            handleTextChange(editorRef.current.innerHTML)
+
         // if no sibling were found we just finish
         if (!currentNode) return
 
@@ -365,6 +381,10 @@ const Editor: React.FC = () => {
         newRange.setEndAfter(currentNode);
         selection?.removeAllRanges();
         selection?.addRange(newRange);
+
+        // we save changes in popped stated
+        if (editorRef.current)
+            handleTextChange(editorRef.current.innerHTML)
 
 
     }
@@ -405,6 +425,10 @@ const Editor: React.FC = () => {
         }
 
         const handleSelectionChange = () => {
+
+            // save selected text into popped state
+            handleTextSelect()
+
             const editor = editorRef.current;
             if (!editor || !selection || !selection.anchorNode) return;
 
@@ -461,7 +485,7 @@ const Editor: React.FC = () => {
             currentNode.nodeType === Node.TEXT_NODE ||
             (currentNode.nodeType === Node.ELEMENT_NODE && (currentNode as HTMLElement).tagName === "BR")
         ) {
-            // we create paragraph whether with text we typed or blank br 
+            // we create paragraph whether with text we typed or with blank br 
             const paragraphNode = document.createElement("p");
             paragraphNode.innerHTML = currentNode.textContent || "<br>";
             // we use created paragraph above only if we typed directly to editor
@@ -469,10 +493,21 @@ const Editor: React.FC = () => {
                 editor.replaceChild(paragraphNode, currentNode);
             }
 
+            // we save changes in popped stated
+            handleTextChange(editor.innerHTML)
+
             // we set selection pointer position to 1 letter right to avoid troubles
             selection.collapse(paragraphNode, 1);
         }
     };
+
+    useEffect(() => {
+        const editor = editorRef.current
+        // we take state value if editor is running slow
+        if (editor && editor.innerHTML !== textHTML) {
+            editor.innerHTML = textHTML
+        }
+    }, [textHTML])
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         const editor = editorRef.current;
@@ -496,7 +531,6 @@ const Editor: React.FC = () => {
             // moving cursor to the br
             range.setStartAfter(br);
             range.collapse(true);
-
         }
 
         // create paragraph manually when pressing Enter key
@@ -531,6 +565,9 @@ const Editor: React.FC = () => {
             selection?.removeAllRanges();
             selection?.addRange(newRange);
         }
+
+        // we save changes in popped stated
+        handleTextChange(editor.innerHTML)
     }
 
 
