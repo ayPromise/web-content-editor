@@ -1,4 +1,7 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { SelectedTextProps } from '../EditorContainer';
+import { restoreSelection } from '@/utils/restoreSelection';
+import { wrapSelectedText } from '@/utils/wrapSelectedText';
 
 const TextBoldIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={18} height={18} color={"#000000"} fill={"none"} {...props}>
@@ -37,11 +40,144 @@ const SourceCodeIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-const ControlPanel = () => {
+interface ControlPanelProps {
+    selectedText: SelectedTextProps
+}
+
+interface StylingStateProps {
+    bold: boolean
+    italic: boolean
+    underline: boolean
+    strikeThrough: boolean
+    code: boolean
+}
+
+const ControlPanel = ({ selectedText }: ControlPanelProps) => {
+
+    const [stylingState, setStylingState] = useState<StylingStateProps>({
+        bold: false, italic: false, underline: false, strikeThrough: false, code: false
+    })
+
+    const handleToggleBold = () => {
+        const selection = window.getSelection()
+
+        const { fromElement, startIndex, endIndex } = selectedText;
+
+
+        if (!selectedText || !fromElement || !selection) return;
+
+        // remove bold styling
+        if (stylingState.bold) {
+            const countOfLettersSelected = endIndex - startIndex
+            const contentOfSelectedElement = fromElement.textContent as string
+
+            // If only part of the element is selected, modify only that part
+            if (contentOfSelectedElement.length !== countOfLettersSelected) {
+                const span = wrapSelectedText(fromElement, startIndex, endIndex, "font-normal");
+
+                if (span) {
+                    const newStartIndex = startIndex - contentOfSelectedElement.slice(0, startIndex).length;
+                    const newEndIndex = endIndex - contentOfSelectedElement.slice(0, startIndex).length;
+                    restoreSelection(span, newStartIndex, newEndIndex);
+                }
+                return;
+            }
+
+            fromElement.classList.remove("font-bold")
+
+            if (!fromElement.classList.length) {
+                // if after reseting class we see that element is 'clear' we can remove it
+                const TextNodeHtml: string = fromElement.innerHTML
+                const newTextNode: Node = document.createTextNode(TextNodeHtml)
+                fromElement.parentElement?.replaceChild(newTextNode, fromElement)
+
+
+                // before normalizing we have calculate start and end selection indexes as well
+                const previousTextNodeElement = newTextNode.previousSibling
+                let start = startIndex
+                let end = endIndex
+                if (previousTextNodeElement && previousTextNodeElement.textContent?.length) {
+                    start = previousTextNodeElement.textContent.length + startIndex
+                    end = previousTextNodeElement.textContent.length + endIndex
+                }
+
+                // remember the parent element because normalizing will erase all nodes we knew
+                const parent = newTextNode.parentElement as HTMLElement
+
+                // we are operating with text nodes so better make sure they concatenate 
+                parent.normalize()
+
+                // after manipulating with DOM selection resets so we must take it back
+                restoreSelection(parent, start, end)
+            }
+
+            return
+        }
+
+        // we are operating with text nodes so better make sure they concatenate 
+        fromElement.normalize()
+
+        const textNode = fromElement.firstChild;
+
+
+        if (!textNode || textNode.nodeType !== Node.TEXT_NODE) return;
+
+        if (!textNode.textContent) return
+
+        const parentOfSelectedElement = fromElement.parentElement as HTMLElement
+        // toggling bold back and dont have to create new span and use parents element instead
+        if (parentOfSelectedElement.classList.contains("font-bold")) {
+
+            // we must define selecting indexes before changing the DOM till its not too late
+            const start = fromElement.previousSibling?.textContent?.length + startIndex
+            const end = fromElement.previousSibling?.textContent?.length + endIndex
+
+
+            // we replace element with text node
+            parentOfSelectedElement.replaceChild(textNode, fromElement)
+
+            // now element doesnt exist and we use node as a pointer
+            parentOfSelectedElement.normalize()
+
+            // after manipulating with DOM the selection resets so we must bring it back
+            restoreSelection(parentOfSelectedElement, start, end)
+            return
+        }
+
+        const wrappedElement = wrapSelectedText(
+            fromElement,
+            startIndex,
+            endIndex,
+            "font-bold"
+        );
+
+        if (!wrappedElement) return
+
+
+        // after manipulating with DOM the selection resets so we must bring it back
+        restoreSelection(wrappedElement, 0, wrappedElement.firstChild?.textContent?.length as number)
+
+    };
+
+    useEffect(() => {
+        const pointedElement = selectedText?.fromElement.firstChild?.parentElement
+
+        if (!pointedElement) return
+
+        if (pointedElement.classList.contains("font-bold")) {
+            setStylingState({ ...stylingState, bold: true })
+        } else {
+            setStylingState({ ...stylingState, bold: false })
+        }
+    }, [selectedText])
+
+
+    // console.log(stylingState)
+
     return (
-        <div className='bg-white shadow-md rounded-lg w-full'>
+        <div className='bg-white shadow-md rounded-lg w-full px-9'>
             <div className='flex gap-1 items-center'>
-                <span className='stylingButton'><TextBoldIcon /></span>
+                <span className={`stylingButton ${stylingState.bold ? 'active' : ''}`} onClick={handleToggleBold}><TextBoldIcon /></span>
                 <span className='stylingButton'><TextItalicIcon /></span>
                 <span className='stylingButton'><TextUnderlineIcon /></span>
                 <span className='stylingButton'><TextStrikethroughIcon /></span>
