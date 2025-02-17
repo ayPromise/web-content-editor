@@ -1,6 +1,10 @@
 "use client"
 
+import backspaceImitation from '@/utils/backSpaceImitation';
+import getTextNode from '@/utils/getTextNode';
+import mergingSameClassesElements from '@/utils/mergingSameClassesElements';
 import { restoreSelection } from '@/utils/restoreSelection';
+import restoreSelectionForMultipleNodes from '@/utils/restoreSelectionForMultipleNodes';
 import React, { useEffect, useRef, useState } from 'react'
 
 const DragDropHorizontalIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -109,14 +113,26 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
         if (hoveredElement?.id === "editor") {
             setDraggButtonVisible(false);
             return
-
         }
 
 
         // if what we did hover is left from an element and not the editor as well
         if (hoveredElement && editor.contains(hoveredElement)) {
-            const rect = hoveredElement?.getBoundingClientRect()
-            setDraggButtonTopPosition(rect?.top - editor.getBoundingClientRect().top + 5)
+            // we must go as most outside as possible to meet the direct child of editor
+            let coordsRelatedElement = hoveredElement as HTMLElement
+            while (coordsRelatedElement.id !== "editor") {
+                if (coordsRelatedElement.parentElement.id === "editor")
+                    break
+                coordsRelatedElement = coordsRelatedElement.parentElement
+            }
+
+            const firstElement = coordsRelatedElement.firstElementChild;
+            const rect = firstElement.getBoundingClientRect();
+            const editorRect = editor.getBoundingClientRect();
+
+            // calculate the vertical center of the firstElement relative to the editor
+            const centerPosition = rect.top + (rect.height / 2) - editorRect.top - 11;
+            setDraggButtonTopPosition(centerPosition)
             setDraggButtonVisible(true)
             return
         }
@@ -376,11 +392,7 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
         }
 
         // we select all moved elements
-        const newRange = document.createRange();
-        newRange.setStartBefore(draggedElement);
-        newRange.setEndAfter(currentNode);
-        selection?.removeAllRanges();
-        selection?.addRange(newRange);
+        restoreSelectionForMultipleNodes(draggedElement, currentNode, 0, currentNode.textContent?.length as number)
 
         // we save changes in popped stated
         if (editorRef.current)
@@ -432,9 +444,14 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
             const editor = editorRef.current;
             if (!editor || !selection || !selection.anchorNode) return;
 
-            const selectedNode = selection.anchorNode.nodeType === Node.TEXT_NODE
+            let selectedNode = selection.anchorNode.nodeType === Node.TEXT_NODE
                 ? selection.anchorNode.parentNode
                 : selection.anchorNode;
+
+            while (selectedNode?.parentElement && selectedNode.parentElement.id !== "editor") {
+                selectedNode = selectedNode.parentElement as Node
+            }
+
 
             // Check if the selected node is a <p> inside the editor
             if (selectedNode instanceof HTMLElement && editor.contains(selectedNode)) {
@@ -446,9 +463,21 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
                     lastPlaceholderNode.classList.remove("empty");
                 }
 
+                const placeholders = {
+                    P: "Paragraph",
+                    H1: "Heading 1",
+                    H2: "Heading 2",
+                    H3: "Heading 3",
+                    H4: "Heading 4",
+                    H5: "Heading 5"
+                };
+
+                const tagName = selectedNode.tagName;
+                const placeholderText = placeholders[tagName] || "Paragraph";
+
                 // if element has text - it doesnt get the attributes
                 if (isEmpty) {
-                    selectedNode.setAttribute("data-placeholder", "Press '/' for commands");
+                    selectedNode.setAttribute("data-placeholder", placeholderText);
                     selectedNode.classList.add("empty");
                 } else {
                     selectedNode.removeAttribute("data-placeholder");
@@ -507,6 +536,14 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
         if (editor && editor.innerHTML !== textHTML) {
             editor.innerHTML = textHTML
         }
+
+        const selection = window.getSelection()
+        const node = selection?.anchorNode
+        let element = node
+        while (element?.parentElement && element?.parentElement.id !== "editor")
+            element = element?.parentElement
+
+        if (element) element.normalize()
     }, [textHTML])
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -514,8 +551,47 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
 
         if (!editor) return;
         // prevent deleting the initial paragraph
-        if ((e.key === "Backspace" || e.key === "Delete") && editor.childNodes.length === 1 && !editor.childNodes[0].textContent) {
-            e.preventDefault();
+        if (e.key === "Backspace") {
+            const selection = window.getSelection()
+            const range = selection?.getRangeAt(0) as Range
+
+            const selectedNode = range?.startContainer
+            // need the most parent of textNode
+            let selectedElement: Node = selectedNode.nodeType === 3 ? selectedNode.parentElement as Node : selectedNode
+            while (selectedElement.parentElement.id !== 'editor')
+                selectedElement = selectedElement.parentElement
+
+            // check for position of cursor
+            if (selection?.anchorOffset !== 0 || range.startContainer !== selectedElement) {
+                return
+            }
+            // stop action of default
+            e.preventDefault()
+
+
+            // extract the html part
+            const extractedHTML: string = selectedElement.innerHTML as string
+
+            // we need previous element to place the text
+            const previousElement = selectedElement.previousSibling
+            if (previousElement) {
+
+                const lastNode = previousElement.childNodes[previousElement.childNodes.length - 1]
+                const endIndex = lastNode.textContent?.length
+                // add the new html
+                previousElement.insertAdjacentHTML('beforeend', extractedHTML);
+                // remove the element we select
+                selectedElement.remove()
+
+                // place cursor at the start of transferred text
+                const newRange = document.createRange();
+                if (lastNode.nodeType !== Node.TEXT_NODE) mergingSameClassesElements(lastNode)
+                newRange.setStart(getTextNode(lastNode, 0, lastNode.textContent?.length), endIndex); // Start of the last added node
+                newRange.collapse(true);
+
+                selection.removeAllRanges();
+                selection.addRange(newRange)
+            }
         }
 
         // entering br element
@@ -524,9 +600,10 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
             const range = selection?.getRangeAt(0)
             if (!range) return
 
+
             // we insert br to the place user was
             const br = document.createElement("br");
-            range.insertNode(br);
+            range.insertNode(br)
 
             // moving cursor to the br
             range.setStartAfter(br);
@@ -535,35 +612,119 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
 
         // create paragraph manually when pressing Enter key
         else if (e.key === "Enter") {
-            e.preventDefault()
+            e.preventDefault();
             const range = selection?.getRangeAt(0)
-            if (!range) return
+            if (!range) return;
 
-            const newParagraph = document.createElement("p");
+            const newParagraph = document.createElement("p")
+            newParagraph.innerHTML = "<br>"
 
-            // we replace text after cursor to place it to the new paragraph 
-            const tranferedText = range.startContainer.textContent?.slice(range.startOffset)
-            if (tranferedText) {
-                newParagraph.innerHTML = tranferedText
-                range.startContainer.textContent = range.startContainer.textContent?.replace(tranferedText, "") || ""
+            let startNode = range.startContainer
+            let currentElement = startNode.nodeType === 3 ? startNode.parentNode : startNode
+
+
+            while (currentElement && currentElement.id !== "editor") {
+                if (currentElement.parentElement.id === "editor") break;
+                currentElement = currentElement.parentElement;
             }
-            else
-                newParagraph.innerHTML = "<br>"
 
-            newParagraph.addEventListener("dragstart", handleTextDragStart)
+            if (!currentElement) return;
+
+            // draggedElement must be first parent of the text Node
+            let draggedElement: HTMLElement = startNode.nodeType === 3 && startNode.parentElement?.parentElement.id !== 'editor' ? startNode.parentElement : startNode
 
 
-            const currentNode = range.startContainer;
-            const currentElement = currentNode.nodeType === 3 ? currentNode.parentNode : currentNode;
+            const from = range.endOffset
+            // extract the content part for the next paragraph
+            const htmlPartWeTransfer = draggedElement.textContent.slice(from)
 
-            if (!currentElement) return
+            // remove the content from the dragged element
+            if (htmlPartWeTransfer)
+                draggedElement.textContent = draggedElement.textContent.slice(0, from)
 
-            currentElement.after(newParagraph)
-            const newRange = document.createRange();
-            newRange.setStart(newParagraph, 0);
-            newRange.collapse(true);
-            selection?.removeAllRanges();
-            selection?.addRange(newRange);
+            // extract styles of dragged element
+            const styles = draggedElement.classList ? Array.from(draggedElement.classList) : []
+            // extract his tag for further wrapping
+            const tagName = draggedElement.tagName
+
+            console.log(draggedElement, draggedElement.nextSibling, tagName)
+
+            // give extracted part to the next paragraph in element or not
+            if (((styles && styles.length) || tagName === 'CODE') && htmlPartWeTransfer) {
+                // create element with needed tag and give it styles with content
+                const newElement = document.createElement(tagName)
+                newElement.classList.add(...styles)
+                newParagraph.innerHTML = ""
+                newElement.textContent = htmlPartWeTransfer
+                newParagraph.append(newElement)
+            } else if (htmlPartWeTransfer) {
+                newParagraph.textContent = htmlPartWeTransfer
+            }
+
+            // copy and paste all the elements to the right to the next paragraph
+            // and remove them from old place as well
+            while (draggedElement.nextSibling) {
+                const siblingToTransfer = draggedElement.nextSibling;
+
+                newParagraph.append(siblingToTransfer.cloneNode(true));
+
+                draggedElement.nextSibling.remove();
+            }
+
+            newParagraph.addEventListener("dragstart", handleTextDragStart);
+            currentElement.after(newParagraph);
+
+            // set selection to the start of the new paragraph
+            restoreSelection(newParagraph, 0, 0)
+        }
+
+        else if (e.key === "ArrowRight") {
+            const selection = window.getSelection();
+            if (!selection || selection.rangeCount === 0) return;
+
+            const range = selection.getRangeAt(0);
+            if (!range) return;
+
+            const selectedNode = selection.anchorNode;
+            let mainElement = selectedNode?.parentElement
+            while (mainElement?.parentElement && mainElement.parentElement.id !== "editor")
+                mainElement = mainElement.parentElement
+
+            if (!selectedNode || selectedNode.nodeType !== Node.TEXT_NODE || selectedNode.parentElement === mainElement) return;
+
+            const isAtEnd = range.startOffset === selectedNode.textContent.length;
+            if (!isAtEnd) return;
+
+            // Get the next sibling node
+            const nextNode = selectedNode.parentElement?.nextSibling;
+
+            // Check if the next node is already a text node with only whitespace
+            if (nextNode) {
+                return; // Don't add another space if there's already one
+            }
+
+            // Insert a non-breaking space (`\u00A0`) to allow further typing
+            const spaceNode = document.createTextNode("\u00A0");
+            selectedNode.parentElement?.after(spaceNode);
+
+            // Move cursor after the inserted space
+            range.setStartAfter(spaceNode);
+            range.setEndAfter(spaceNode);
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            document.addEventListener("selectionchange", () => {
+                const newSelection = window.getSelection();
+                if (!newSelection) return;
+
+                const newRange = newSelection.getRangeAt(0);
+                const newNode = newRange.startContainer;
+
+                // If the cursor is no longer next to the added space, remove it
+                if (newNode !== spaceNode.parentElement && selectedNode.textContent === "&nbsp;") {
+                    spaceNode.remove();
+                }
+            });
         }
 
         // we save changes in popped stated
@@ -573,9 +734,20 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
 
     return (
         <div className='relative'>
-            <div ref={editorRef} onMouseMove={handleMouseMove} onKeyDown={handleKeyDown} onDragOver={handleDraggOver} onDrop={handleDrop} onInput={handleInput} contentEditable id="editor" className='text-black focus:outline-none shadow-lg rounded-lg w-[600px] h-[400px] py-3 pl-12 pr-10 flex flex-col gap-7 selection:bg-orange-100'></div>
+            <div
+                ref={editorRef}
+                onMouseMove={handleMouseMove}
+                onKeyDown={handleKeyDown}
+                onDragOver={handleDraggOver}
+                onDrop={handleDrop}
+                onInput={handleInput}
+                contentEditable
+                id="editor"
+                className='text-white bg-[#48442f] focus:outline-none shadow-lg rounded-lg w-[1000px] pt-7 pb-3 pl-12 pr-10 flex flex-col gap-7 selection:bg-yellow-600 text-[17px] min-h-[1000px] overflow-y-auto'>
+            </div>
+
             <div onMouseMove={handleMouseMove} onDragStart={handleDraggStart} onDragEnd={handleDragEnd} draggable style={draggButtonStyles} className='dragButton'>
-                <DragDropHorizontalIcon />
+                <DragDropHorizontalIcon className='text-white' />
             </div>
         </div>
 
