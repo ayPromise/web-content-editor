@@ -2,6 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { SelectedTextProps } from '../EditorContainer';
 import { restoreSelection } from '@/utils/restoreSelection';
 import { wrapSelectedText } from '@/utils/wrapSelectedText';
+import mergingSameClassesElements from '@/utils/mergingSameClassesElements';
+import disassembleElement from '@/utils/dissembleElements';
+import restoreSelectionForMultipleNodes from '@/utils/restoreSelectionForMultipleNodes';
+import checkSelectedStyle from '@/utils/checkSelectedStyle';
+import TagSelector from './TagSelector';
+import Conditional from '../Conditional';
+import JustifyToggler from './JustifyToggler';
 
 const TextBoldIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={18} height={18} color={"#000000"} fill={"none"} {...props}>
@@ -41,148 +48,259 @@ const SourceCodeIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 interface ControlPanelProps {
-    selectedText: SelectedTextProps
+    selectedText: SelectedTextProps | null
+    handleTextSelect: () => void
 }
 
 interface StylingStateProps {
     bold: boolean
     italic: boolean
     underline: boolean
-    strikeThrough: boolean
+    lineThrough: boolean
     code: boolean
 }
 
-const ControlPanel = ({ selectedText }: ControlPanelProps) => {
+const ControlPanel = ({ selectedText, handleTextSelect }: ControlPanelProps) => {
 
     const [stylingState, setStylingState] = useState<StylingStateProps>({
-        bold: false, italic: false, underline: false, strikeThrough: false, code: false
+        bold: false, italic: false, underline: false, lineThrough: false, code: false
     })
 
-    const handleToggleBold = () => {
-        const selection = window.getSelection()
+    const handleApplyStyle = (style: string, isApplied: boolean) => {
 
-        const { fromElement, startIndex, endIndex } = selectedText;
+        // if nothing was selected - we cant toggle boldness 
+        if (!selectedText) return
 
+        // dont apply styles for <code> element
+        if (selectedText.fromTextNode?.node.parentElement?.tagName === "CODE") return
 
-        if (!selectedText || !fromElement || !selection) return;
+        // if (selectedText.fromTextNode?.startIndex === selectedText.fromTextNode?.endIndex) return
 
-        // remove bold styling
-        if (stylingState.bold) {
-            const countOfLettersSelected = endIndex - startIndex
-            const contentOfSelectedElement = fromElement.textContent as string
+        // multiple nodes have another logic in styling
+        const isMultiple: boolean | undefined = selectedText?.multipleNodes
+        if (isMultiple) {
+            ApplyStylesForMultipleNodes(style, isApplied)
+            return
+        }
+
+        if (!selectedText.fromTextNode) return
+
+        // extract from props the needed vars
+        const { node, startIndex, endIndex } = selectedText.fromTextNode;
+
+        // get the element of the selected text node
+        const selectedElement: HTMLElement = node.parentElement as HTMLElement
+
+        // get the info about if we select all the letters of the textNode
+        const countOfLettersSelected = endIndex - startIndex
+        const contentOfSelectedElement = selectedElement.textContent as string
+
+        // remove styling
+        if (isApplied) {
 
             // If only part of the element is selected, modify only that part
             if (contentOfSelectedElement.length !== countOfLettersSelected) {
-                const span = wrapSelectedText(fromElement, startIndex, endIndex, "font-normal");
-
-                if (span) {
-                    const newStartIndex = startIndex - contentOfSelectedElement.slice(0, startIndex).length;
-                    const newEndIndex = endIndex - contentOfSelectedElement.slice(0, startIndex).length;
-                    restoreSelection(span, newStartIndex, newEndIndex);
-                }
+                disassembleElement(selectedElement, startIndex, endIndex, style, isApplied, 'span')
                 return;
             }
 
-            fromElement.classList.remove("font-bold")
+            selectedElement.classList.remove(style)
 
-            if (!fromElement.classList.length) {
-                // if after reseting class we see that element is 'clear' we can remove it
-                const TextNodeHtml: string = fromElement.innerHTML
-                const newTextNode: Node = document.createTextNode(TextNodeHtml)
-                fromElement.parentElement?.replaceChild(newTextNode, fromElement)
+            if (!selectedElement.classList.length) {
+                // if span has no more styles we can replace thatspan with ordinar textNode
+                const newTextNode: Node = document.createTextNode(node.textContent as string);
+
+                selectedElement.parentElement?.replaceChild(newTextNode, selectedElement);
+
+                // Запам'ятовуємо parent перед normalize()
+                const parent = newTextNode.parentElement as HTMLElement;
 
 
-                // before normalizing we have calculate start and end selection indexes as well
-                const previousTextNodeElement = newTextNode.previousSibling
-                let start = startIndex
-                let end = endIndex
-                if (previousTextNodeElement && previousTextNodeElement.textContent?.length) {
-                    start = previousTextNodeElement.textContent.length + startIndex
-                    end = previousTextNodeElement.textContent.length + endIndex
-                }
 
-                // remember the parent element because normalizing will erase all nodes we knew
-                const parent = newTextNode.parentElement as HTMLElement
+                // Повертаємо selection
+                restoreSelection(newTextNode, startIndex, endIndex);
 
-                // we are operating with text nodes so better make sure they concatenate 
-                parent.normalize()
-
-                // after manipulating with DOM selection resets so we must take it back
-                restoreSelection(parent, start, end)
+                // Об'єднуємо текстові вузли
+                parent.normalize();
+                return
             }
 
+            mergingSameClassesElements(selectedElement)
+
             return
         }
 
-        // we are operating with text nodes so better make sure they concatenate 
-        fromElement.normalize()
 
-        const textNode = fromElement.firstChild;
+        if (!node || node.nodeType !== Node.TEXT_NODE) return;
 
+        if (!node.textContent) return
 
-        if (!textNode || textNode.nodeType !== Node.TEXT_NODE) return;
+        // if it already has some classes 
+        if (selectedElement.classList.length) {
+            // If only part of the element is selected, modify only that part
+            if (contentOfSelectedElement.length !== countOfLettersSelected) {
 
-        if (!textNode.textContent) return
-
-        const parentOfSelectedElement = fromElement.parentElement as HTMLElement
-        // toggling bold back and dont have to create new span and use parents element instead
-        if (parentOfSelectedElement.classList.contains("font-bold")) {
-
-            // we must define selecting indexes before changing the DOM till its not too late
-            const start = fromElement.previousSibling?.textContent?.length + startIndex
-            const end = fromElement.previousSibling?.textContent?.length + endIndex
-
-
-            // we replace element with text node
-            parentOfSelectedElement.replaceChild(textNode, fromElement)
-
-            // now element doesnt exist and we use node as a pointer
-            parentOfSelectedElement.normalize()
-
-            // after manipulating with DOM the selection resets so we must bring it back
-            restoreSelection(parentOfSelectedElement, start, end)
+                // prevent disassembling the main element 
+                disassembleElement(selectedText.mainElement === selectedElement ? node : selectedElement, startIndex, endIndex, style, isApplied, 'span')
+                return;
+            }
+            selectedElement.classList.add(style)
+            mergingSameClassesElements(selectedElement)
             return
         }
 
-        const wrappedElement = wrapSelectedText(
-            fromElement,
+        // if it is empty textNode we wrap with new span
+
+        const wrappedTextNode = wrapSelectedText(
+            node,
             startIndex,
             endIndex,
-            "font-bold"
+            style
         );
 
-        if (!wrappedElement) return
 
+        if (!wrappedTextNode) return
 
-        // after manipulating with DOM the selection resets so we must bring it back
-        restoreSelection(wrappedElement, 0, wrappedElement.firstChild?.textContent?.length as number)
+        mergingSameClassesElements(wrappedTextNode?.parentElement as HTMLElement)
+
 
     };
 
-    useEffect(() => {
-        const pointedElement = selectedText?.fromElement.firstChild?.parentElement
+    const ApplyStylesForMultipleNodes = (style: string, isApplied: boolean) => {
 
-        if (!pointedElement) return
+        if (!selectedText?.orderedNodes?.length) return
 
-        if (pointedElement.classList.contains("font-bold")) {
-            setStylingState({ ...stylingState, bold: true })
-        } else {
-            setStylingState({ ...stylingState, bold: false })
+        const { orderedNodes } = selectedText
+
+        const disassembledArray: {
+            fromElement: Node;
+            startIndex: number;
+            endIndex: number | undefined;
+        }[] = []
+
+
+        orderedNodes.forEach((nodeObject) => {
+
+            if (nodeObject.node.parentElement?.tagName === "CODE") return
+
+            let currentElement: HTMLElement = nodeObject.node
+
+            if (currentElement.parentElement.parentElement && currentElement.parentElement.parentElement.id !== 'editor')
+                currentElement = currentElement.parentElement
+
+
+            const elementObj: {
+                fromElement: Node;
+                startIndex: number;
+                endIndex: number | undefined;
+            } = disassembleElement(currentElement, nodeObject.startIndex, nodeObject.endIndex, style, isApplied, 'span')
+
+            disassembledArray.push(elementObj)
+        })
+
+        const first: {
+            fromElement: Node;
+            startIndex: number;
+            endIndex: number | undefined;
+        } = disassembledArray[0]
+
+        const last: {
+            fromElement: Node;
+            startIndex: number;
+            endIndex: number | undefined;
+        } = disassembledArray[disassembledArray.length - 1]
+
+        if (!last) {
+            restoreSelection(first.fromElement, 0, first.fromElement.textContent?.length)
+            return
         }
+
+        if (!isApplied) {
+            restoreSelectionForMultipleNodes(first.fromElement, last.fromElement, 0, last.fromElement.textContent?.length as number)
+        } else {
+            restoreSelectionForMultipleNodes(first.fromElement, last.fromElement, first.startIndex, last.endIndex as number)
+        }
+
+    }
+
+    const handleChangeTagName = (newTag: string) => {
+        const oldElement = selectedText?.mainElement
+        const newElement = document.createElement(newTag)
+
+        newElement.innerHTML = oldElement?.innerHTML
+        newElement.classList.add(...Array.from(oldElement?.classList))
+        oldElement?.after(newElement)
+        oldElement?.remove()
+
+        restoreSelection(newElement, 0, 0)
+        handleTextSelect()
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+        if (!selectedText) return;
+        if (event.ctrlKey || event.metaKey) {
+            event.preventDefault()
+            switch (event.key) {
+                case 'b':
+                    handleApplyStyle('font-bold', stylingState.bold);
+                    break;
+                case 'i':
+                    handleApplyStyle('italic', stylingState.italic);
+                    break;
+                case 'u':
+                    handleApplyStyle('underline', stylingState.underline);
+                    break;
+                case 's':
+                    handleApplyStyle('line-through', stylingState.lineThrough);
+                    break;
+                case '`':
+                    handleApplyStyle('code', stylingState.code);
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+
+    const wrapToTheCodeTag = () => {
+        if (!selectedText) return
+
+    }
+
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [selectedText, stylingState]);
+
+
+    useEffect(() => {
+        const selectedElement = selectedText?.fromTextNode?.node.parentElement as HTMLElement
+        const orderedList = selectedText?.orderedNodes
+        const { bold, italic, underline, lineThrough } = checkSelectedStyle(selectedElement, orderedList)
+
+
+        setStylingState({ ...stylingState, bold, italic, underline, lineThrough })
     }, [selectedText])
 
 
-    // console.log(stylingState)
-
     return (
-        <div className='bg-white shadow-md rounded-lg w-full px-9'>
+        <div className='bg-[#48442f] shadow-md rounded-lg w-full px-9 flex flex-row justify-between py-2'>
             <div className='flex gap-1 items-center'>
-                <span className={`stylingButton ${stylingState.bold ? 'active' : ''}`} onClick={handleToggleBold}><TextBoldIcon /></span>
-                <span className='stylingButton'><TextItalicIcon /></span>
-                <span className='stylingButton'><TextUnderlineIcon /></span>
-                <span className='stylingButton'><TextStrikethroughIcon /></span>
-                <span className='stylingButton'><SourceCodeIcon /></span>
+                <span className={`stylingButton ${stylingState.bold ? 'active' : ''}`} onClick={() => handleApplyStyle("font-bold", stylingState.bold)}><TextBoldIcon color='white' /></span>
+                <span className={`stylingButton ${stylingState.italic ? 'active' : ''}`} onClick={() => handleApplyStyle("italic", stylingState.italic)}><TextItalicIcon color='white' /></span>
+                <span className={`stylingButton ${stylingState.underline ? 'active' : ''}`} onClick={() => handleApplyStyle("underline", stylingState.underline)}><TextUnderlineIcon color='white' /></span>
+                <span className={`stylingButton ${stylingState.lineThrough ? 'active' : ''}`} onClick={() => handleApplyStyle("line-through", stylingState.lineThrough)}><TextStrikethroughIcon color='white' /></span>
+                <span className={`stylingButton ${stylingState.code ? 'active' : ''}`} onClick={wrapToTheCodeTag}><SourceCodeIcon color='white' /></span>
             </div>
+
+            <Conditional showWhen={!!selectedText?.mainElement.tagName}>
+                <div className='flex items-center -my-2'>
+                    <JustifyToggler value={selectedText?.mainElement.classList} />
+                    <TagSelector value={selectedText?.mainElement.tagName} onChange={handleChangeTagName} />
+                </div>
+            </Conditional>
         </div>
     )
 }
