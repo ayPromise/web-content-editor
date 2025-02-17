@@ -1,10 +1,11 @@
 export const wrapSelectedText = (
-    parentElement: HTMLElement,
+    fromTextNode: Node,
     startIndex: number,
     endIndex: number,
     className: string
-): HTMLElement | null => {
-    const textNode = parentElement.firstChild;
+): ChildNode | null => {
+    const textNode = fromTextNode;
+    const parentOfTextNode = fromTextNode.parentElement as HTMLElement
     if (!textNode || textNode.nodeType !== Node.TEXT_NODE || !textNode.textContent) return null;
 
     // Extract text parts
@@ -24,7 +25,7 @@ export const wrapSelectedText = (
     if (afterSelectedPart) fragment.appendChild(document.createTextNode(afterSelectedPart));
 
     // Replace the original text with the wrapped version
-    parentElement.replaceChild(fragment, textNode);
+    parentOfTextNode.replaceChild(fragment, textNode);
 
-    return span;
+    return span.firstChild;
 };
