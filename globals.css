@@ -2,38 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face{
+    font-family: "UAF-Memory";
+    src: url("public/fonts/UAFMemory-Regular.otf") format('opentype');
+    font-weight: 500;
+    font-style: normal;
+}
+
+*{
+    @apply font-[UAF-Memory]
+}
+
 /*Editor*/
+
+#editor code {
+  @apply bg-blue-100 text-black rounded p-1 px-3 before:content-['\`'] after:content-['\`']
+}
+
+#editor h1 {
+  @apply text-2xl font-bold;
+}
+
+#editor h2 {
+  @apply text-xl font-bold;
+}
+
+#editor h3 {
+  @apply text-lg font-semibold;
+}
+
+#editor h4 {
+  @apply text-base font-medium;
+}
+
+#editor h5 {
+  @apply text-sm font-medium;
+}
+
+#editor p {
+  @apply text-base leading-relaxed;
+}
 #editor>*{
-    @apply relative transition-[background-color] py-1
+    @apply relative transition-[background-color] py-2
 }
 
 .empty{
-    @apply before:content-[attr(data-placeholder)] before:absolute text-gray-400
+    @apply before:content-[attr(data-placeholder)] before:absolute text-gray-200
 }
 
 .dragged{
-    @apply bg-orange-100
+    @apply bg-yellow-600
 }
 
 .add-before::before{
-    @apply content-[""] block h-[4px] left-0 right-0 top-[-4px] bg-orange-100 absolute
+    @apply content-[""] block h-[4px] left-0 right-0 top-[-4px] bg-yellow-600 absolute
 }
 
 .add-after::after{
-    @apply content-[""] block h-[4px] left-0 right-0 bottom-[-4px] bg-orange-100 absolute
+    @apply content-[""] block h-[4px] left-0 right-0 bottom-[-4px] bg-yellow-600 absolute
 }
 
 .add-between::after {
-    @apply content-[""] block h-[4px] left-0 right-0 bottom-[-20px] bg-orange-100 absolute
+    @apply content-[""] block h-[4px] left-0 right-0 bottom-[-20px] bg-yellow-600 absolute
 }
 
 .add-inside::after{
-    @apply content-[""] block h-full w-[4px] left-0 bottom-0 bg-orange-100 absolute z-[-1];
+    @apply content-[""] block h-full w-[4px] left-0 bottom-0 bg-yellow-600 absolute z-[-1];
     left:var(--drop-left, 0px);
 }
 
 .dragButton{
-    @apply left-[5px] absolute w-[40px] h-[22px] cursor-grab flex items-center justify-center transition-opacity duration-500
+    @apply left-[5px] absolute w-[40px] h-[20px] cursor-grab flex items-center justify-center transition-opacity duration-500
 }
 
 
@@ -42,9 +81,9 @@
 
 /*Control Panel*/
 .stylingButton{
-    @apply p-2 cursor-pointer hover:bg-slate-300 transition-[background-color] duration-300 rounded
+    @apply px-5 py-2 cursor-pointer hover:bg-yellow-500 transition-[background-color] duration-300 rounded
 }
 
 .active{
-    @apply bg-slate-200
+    @apply bg-yellow-700
 }   
