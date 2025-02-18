@@ -16,7 +16,7 @@
 /*Editor*/
 
 #editor code {
-  @apply bg-blue-100 text-black rounded p-1 px-3 before:content-['\`'] after:content-['\`']
+  @apply bg-blue-100 text-black rounded pt-1 -mt-1 px-3 before:content-['\`'] after:content-['\`']
 }
 
 #editor h1 {
