@@ -126,7 +126,8 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
                 coordsRelatedElement = coordsRelatedElement.parentElement
             }
 
-            const firstElement = coordsRelatedElement.firstElementChild;
+            // take the first element as orientier but also can provide the whole element
+            const firstElement = coordsRelatedElement.firstElementChild || coordsRelatedElement;
             const rect = firstElement.getBoundingClientRect();
             const editorRect = editor.getBoundingClientRect();
 
@@ -509,6 +510,17 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
         // if something went wrong
         if (!currentNode) return;
 
+        // select all child elements inside #editor
+        const allElements = editor.querySelectorAll("*");
+
+        // remove styles attributes
+        allElements.forEach(element => {
+            if (element.hasAttribute("style")) {
+                element.removeAttribute("style");
+                element.normalize()
+            }
+        });
+
         // check if we typed or entered new line
         if (
             currentNode.nodeType === Node.TEXT_NODE ||
@@ -586,7 +598,9 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
                 // place cursor at the start of transferred text
                 const newRange = document.createRange();
                 if (lastNode.nodeType !== Node.TEXT_NODE) mergingSameClassesElements(lastNode)
-                newRange.setStart(getTextNode(lastNode, 0, lastNode.textContent?.length), endIndex); // Start of the last added node
+                const text = lastNode.nodeType !== Node.TEXT_NODE ? getTextNode(lastNode, 0, lastNode.textContent?.length) as Node : lastNode
+                lastNode.parentElement.normalize()
+                newRange.setStart(text, endIndex); // Start of the last added node
                 newRange.collapse(true);
 
                 selection.removeAllRanges();
@@ -628,6 +642,13 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
                 currentElement = currentElement.parentElement;
             }
 
+            // create a new line when we select the white space
+            if (startNode === currentElement) {
+                currentElement.after(newParagraph)
+                restoreSelection(newParagraph, 0, 0)
+                return
+            }
+
             if (!currentElement) return;
 
             // draggedElement must be first parent of the text Node
@@ -638,6 +659,7 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
             // extract the content part for the next paragraph
             const htmlPartWeTransfer = draggedElement.textContent.slice(from)
 
+
             // remove the content from the dragged element
             if (htmlPartWeTransfer)
                 draggedElement.textContent = draggedElement.textContent.slice(0, from)
@@ -647,7 +669,6 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
             // extract his tag for further wrapping
             const tagName = draggedElement.tagName
 
-            console.log(draggedElement, draggedElement.nextSibling, tagName)
 
             // give extracted part to the next paragraph in element or not
             if (((styles && styles.length) || tagName === 'CODE') && htmlPartWeTransfer) {
@@ -685,12 +706,14 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
             const range = selection.getRangeAt(0);
             if (!range) return;
 
+
             const selectedNode = selection.anchorNode;
             let mainElement = selectedNode?.parentElement
             while (mainElement?.parentElement && mainElement.parentElement.id !== "editor")
                 mainElement = mainElement.parentElement
 
             if (!selectedNode || selectedNode.nodeType !== Node.TEXT_NODE || selectedNode.parentElement === mainElement) return;
+
 
             const isAtEnd = range.startOffset === selectedNode.textContent.length;
             if (!isAtEnd) return;
@@ -741,7 +764,7 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
                 onDragOver={handleDraggOver}
                 onDrop={handleDrop}
                 onInput={handleInput}
-                contentEditable
+                contentEditable="plaintext-only"
                 id="editor"
                 className='text-white bg-[#48442f] focus:outline-none shadow-lg rounded-lg w-[1000px] pt-7 pb-3 pl-12 pr-10 flex flex-col gap-7 selection:bg-yellow-600 text-[17px] min-h-[1000px] overflow-y-auto'>
             </div>
