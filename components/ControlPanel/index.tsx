@@ -210,8 +210,15 @@ const ControlPanel = ({ selectedText, handleTextSelect }: ControlPanelProps) => 
             endIndex: number | undefined;
         } = disassembledArray[disassembledArray.length - 1]
 
-        if (!last) {
+        // there are cases when after merging element doesnt exist anymore
+
+        if (!last || !last.fromElement.isConnected) {
             restoreSelection(first.fromElement, 0, first.fromElement.textContent?.length)
+            return
+        }
+
+        if (!first || !first.fromElement.isConnected) {
+            restoreSelection(last.fromElement, 0, last.fromElement.textContent?.length)
             return
         }
 
@@ -265,7 +272,26 @@ const ControlPanel = ({ selectedText, handleTextSelect }: ControlPanelProps) => 
     const wrapToTheCodeTag = () => {
         if (!selectedText) return
 
+        if (selectedText.multipleNodes) {
+            return
+        }
+
+        if (!selectedText.fromTextNode) return
+        const { node, startIndex, endIndex } = selectedText.fromTextNode
+
+        if (node.parentElement?.tagName === "CODE") {
+            const textNode = document.createTextNode(node.textContent)
+            node.parentElement.after(textNode)
+            node.parentElement.remove()
+            restoreSelection(textNode as Node, 0, textNode.textContent?.length as number)
+            selectedText.mainElement.normalize()
+            return
+        }
+        const wrappedTextNode = wrapSelectedText(node, startIndex, endIndex, "", "CODE")
+
+        restoreSelection(wrappedTextNode as Node, 0, wrappedTextNode?.textContent?.length as number)
     }
+
 
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
