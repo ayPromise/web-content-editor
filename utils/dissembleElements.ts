@@ -11,6 +11,7 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
 
     const isTextNode = element.nodeType === 3
 
+
     // we rememeber the parts divided
     const previousPart:string = element.textContent.slice(0, startIndex)
     const theSelectedPart:string = element.textContent.slice(startIndex, endIndex)
@@ -28,14 +29,15 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
     let theSelectedElement:Text|HTMLSpanElement = document.createTextNode(theSelectedPart)
 
     // if it still has classes - we dont mind about text node and declare the span element
-    if(isTextNode)
+    if(isTextNode && !isAppliedStyle)
     {
         theSelectedElement = document.createElement(withTag)
         theSelectedElement.classList.add(className)
         theSelectedElement.textContent = theSelectedPart
+
     }
 
-    if(!isTextNode && element.classList.length)
+    if(!isTextNode && ((!isAppliedStyle && element.classList.length >= 1) || (isAppliedStyle && element.classList.length > 1)))
     {
         theSelectedElement = document.createElement(withTag)
         theSelectedElement.classList.add(...Array.from(element.classList).sort())
@@ -46,6 +48,7 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
         else
             theSelectedElement.classList.add(className)
     }
+
 
     // declare the next element with styles and remembered part
     const nextElement:HTMLSpanElement = isTextNode ? document.createTextNode('') : document.createElement(element.tagName)
@@ -89,8 +92,9 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
     // if our next part is just empty - we delete it
     if(!nextElement.textContent) nextElement.remove()
 
+
     // we try to merge sibling elements if it is possible
-    const changedElementObj = mergingSameClassesElements(theSelectedElement as HTMLElement)
+    const changedElementObj = theSelectedElement.nodeType !== Node.TEXT_NODE ? mergingSameClassesElements(theSelectedElement as HTMLElement):null
 
     return changedElementObj
 
