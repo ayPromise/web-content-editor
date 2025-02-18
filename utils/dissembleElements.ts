@@ -37,6 +37,7 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
 
     }
 
+
     if(!isTextNode && ((!isAppliedStyle && element.classList.length >= 1) || (isAppliedStyle && element.classList.length > 1)))
     {
         theSelectedElement = document.createElement(withTag)
@@ -93,10 +94,18 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
     if(!nextElement.textContent) nextElement.remove()
 
 
-    // we try to merge sibling elements if it is possible
-    const changedElementObj = theSelectedElement.nodeType !== Node.TEXT_NODE ? mergingSameClassesElements(theSelectedElement as HTMLElement):null
+    if(theSelectedElement.nodeType !== Node.TEXT_NODE)
+    {
+        // we try to merge sibling elements if it is possible
+        const changedElementObj = mergingSameClassesElements(theSelectedElement as HTMLElement)
+        return changedElementObj
+    }else{
+        theSelectedElement.parentElement?.normalize()
+        return null
+    }
 
-    return changedElementObj
+    
+
 
 }
 

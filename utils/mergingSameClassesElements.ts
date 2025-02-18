@@ -15,7 +15,7 @@ import { restoreSelection } from "./restoreSelection"
         if(previousSibling && nextSibling && areArraysEqual(previousSiblingStyles, nextSiblingStyles) && areArraysEqual(previousSiblingStyles, appliedStylesToSelectedNode)){
                 // we must merge the all three elements in one
                 fromElement.insertAdjacentHTML('afterbegin', previousSibling.innerHTML)
-                fromElement.insertAdjacentHTML('afterend', nextSibling.innerHTML)
+                fromElement.insertAdjacentHTML('beforeend', nextSibling.innerHTML)
                 fromElement.normalize()
                 previousSibling.remove()
                 nextSibling.remove()
@@ -43,7 +43,7 @@ import { restoreSelection } from "./restoreSelection"
         } else if(nextSibling && areArraysEqual(nextSiblingStyles, appliedStylesToSelectedNode))
         {
                 // we must merge with the next sibling
-                fromElement.insertAdjacentHTML('afterend', nextSibling.innerHTML)
+                fromElement.insertAdjacentHTML('beforeend', nextSibling.innerHTML)
                 fromElement.normalize()
                 nextSibling.remove()
 
