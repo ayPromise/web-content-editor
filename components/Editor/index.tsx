@@ -1,17 +1,12 @@
 "use client"
 
-import backspaceImitation from '@/utils/backSpaceImitation';
+import { useTextSelection } from '@/context/TextSelectionContext';
+import { DragDropHorizontalIcon } from '@/icons';
 import getTextNode from '@/utils/getTextNode';
 import mergingSameClassesElements from '@/utils/mergingSameClassesElements';
-import { restoreSelection } from '@/utils/restoreSelection';
+import restoreSelection from '@/utils/restoreSelection';
 import restoreSelectionForMultipleNodes from '@/utils/restoreSelectionForMultipleNodes';
 import React, { useEffect, useRef, useState } from 'react'
-
-const DragDropHorizontalIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg id='dragButton' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={24} height={24} color={"#000000"} fill={"none"} {...props}>
-        <path d="M18 8V8.00635M12 8V8.00635M6 8L6 8.00635M18 15.9937V16M12 15.9937V16M6 15.9937L6 16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
 
 interface DropPositionProps {
     position: "before" | "after" | "between" | "inside",
@@ -23,10 +18,11 @@ interface DropPositionProps {
 interface EditorProps {
     textHTML: string
     handleTextChange: (newHtml: string) => void
-    handleTextSelect: () => void
 }
 
-const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) => {
+const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
+
+    const { handleTextSelect } = useTextSelection()
 
     // ref на едітор для подальшого додавання елементів та івентів до нього
     const editorRef = useRef<HTMLDivElement>(null)
@@ -766,7 +762,7 @@ const Editor = ({ textHTML, handleTextChange, handleTextSelect }: EditorProps) =
                 onInput={handleInput}
                 contentEditable="plaintext-only"
                 id="editor"
-                className='text-white bg-[#48442f] focus:outline-none shadow-lg rounded-lg w-[1000px] pt-7 pb-3 pl-12 pr-10 flex flex-col gap-7 selection:bg-yellow-600 text-[17px] min-h-[1000px] overflow-y-auto'>
+                className='text-white bg-[#48442f] focus:outline-none shadow-lg rounded-lg w-[1100px] pt-7 pb-3 pl-12 pr-10 flex flex-col gap-7 selection:bg-yellow-600 text-[17px] min-h-[1000px] overflow-y-auto'>
             </div>
 
             <div onMouseMove={handleMouseMove} onDragStart={handleDraggStart} onDragEnd={handleDragEnd} draggable style={draggButtonStyles} className='dragButton'>

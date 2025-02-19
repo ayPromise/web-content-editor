@@ -10,13 +10,13 @@
 }
 
 *{
-    @apply font-[UAF-Memory]
+    @apply font-[UAF-Memory] transition duration-300
 }
 
 /*Editor*/
 
 #editor code {
-  @apply bg-blue-100 text-black rounded pt-1 -mt-1 px-3 before:content-['\`'] after:content-['\`']
+  @apply bg-blue-100 text-black rounded py-1 px-2 before:content-['\`'] after:content-['\`']
 }
 
 #editor h1 {
@@ -72,7 +72,7 @@
 }
 
 .dragButton{
-    @apply left-[5px] absolute w-[40px] h-[20px] cursor-grab flex items-center justify-center transition-opacity duration-500
+    @apply left-[5px] absolute w-[40px] h-[20px] cursor-grab flex items-center justify-center transition-opacity
 }
 
 
@@ -81,7 +81,7 @@
 
 /*Control Panel*/
 .stylingButton{
-    @apply px-5 py-2 cursor-pointer hover:bg-yellow-500 transition-[background-color] duration-300 rounded
+    @apply px-5 py-2 cursor-pointer hover:bg-yellow-500 transition-[background-color] rounded
 }
 
 .active{

@@ -6,8 +6,11 @@ interface ConditionalProps {
 }
 
 const Conditional: React.FC<ConditionalProps> = ({ showWhen, children }) => {
-    if (showWhen) return children
+    // if (showWhen) return children
 
+    return <div className={`relative duration-300 ${showWhen ? 'opacity-100' : 'opacity-0'}`}>
+        {children}
+    </div>
     return <Fragment></Fragment>
 }
 

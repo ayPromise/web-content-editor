@@ -1,4 +1,4 @@
-export const wrapSelectedText = (
+const wrapSelectedText = (
     fromTextNode: Node,
     startIndex: number,
     endIndex: number,
@@ -30,3 +30,5 @@ export const wrapSelectedText = (
 
     return element.firstChild;
 };
+
+export default wrapSelectedText

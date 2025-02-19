@@ -1,6 +1,6 @@
 import getTextNode from "./getTextNode"
 import mergingSameClassesElements from "./mergingSameClassesElements"
-import { restoreSelection } from "./restoreSelection"
+import restoreSelection from "./restoreSelection"
 
 const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIndex:number, className:string, isAppliedStyle:boolean, withTag:string)=>{
 
@@ -34,16 +34,18 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
         theSelectedElement = document.createElement(withTag)
         theSelectedElement.classList.add(className)
         theSelectedElement.textContent = theSelectedPart
-
     }
 
-
+    // we are operating with html element and it remains as html element
+    // only if after removing class it still has some
+    // or after adding it has some (optional)
     if(!isTextNode && ((!isAppliedStyle && element.classList.length >= 1) || (isAppliedStyle && element.classList.length > 1)))
     {
         theSelectedElement = document.createElement(withTag)
         theSelectedElement.classList.add(...Array.from(element.classList).sort())
         theSelectedElement.textContent = theSelectedPart
 
+        // new condition
         if(isAppliedStyle)
             theSelectedElement.classList.remove(className)
         else
@@ -63,6 +65,7 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
     // after the selected part we push the next part
     theSelectedElement.after(nextElement)
 
+
     // if our previous part has spaces and no letters - we push these spaces in selected part and delete the next part as well
     if(previousElement.textContent && !previousElement.textContent.trim()){        
         theSelectedElement.textContent = previousElement.textContent + theSelectedElement.textContent
@@ -74,7 +77,7 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
     const start = startIndex - previousElement.textContent.length
     const end = textNodeForSelection?.textContent?.length + endIndex - nextElement.textContent.length
 
-    restoreSelection(textNodeForSelection as Node, start, end)
+    if(start >=0 && end>=0) restoreSelection(textNodeForSelection as Node, start, end)
 
     // if our previous part is just empty - we delete it
     if(!previousElement.textContent) previousElement.remove()
@@ -100,8 +103,8 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
         const changedElementObj = mergingSameClassesElements(theSelectedElement as HTMLElement)
         return changedElementObj
     }else{
-        theSelectedElement.parentElement?.normalize()
-        return null
+        //theSelectedElement.parentElement?.normalize()
+        return {fromElement:theSelectedElement, startIndex:0, endIndex:theSelectedElement.textContent?.length}
     }
 
     

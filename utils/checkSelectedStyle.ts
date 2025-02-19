@@ -1,9 +1,5 @@
-interface ReturnType {
-  bold: boolean;
-  italic: boolean;
-  underline: boolean;
-  lineThrough: boolean;
-}
+import { StylingStateProps } from "@/hooks/useTextStyling";
+
 
 // Припустимо, що SelectedNode виглядає приблизно так:
 export interface SelectedNode {
@@ -13,8 +9,8 @@ export interface SelectedNode {
 const checkSelectedStyle = (
   element?: HTMLElement | null,
   listOfElements?: SelectedNode[]
-): ReturnType => {
-  const result: ReturnType = { bold: false, italic: false, underline: false, lineThrough:false };
+): StylingStateProps => {
+  const result: StylingStateProps = { bold: false, italic: false, underline: false, lineThrough:false, code:false, linkURL:'' };
 
   const styles = [
     { className: "font-bold", key: "bold" },

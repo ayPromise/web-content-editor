@@ -1,4 +1,4 @@
-export const restoreSelection = (
+const restoreSelection = (
     targetElement: Node,
     startIndex: number,
     endIndex: number
@@ -16,3 +16,5 @@ export const restoreSelection = (
     selection.removeAllRanges();
     selection.addRange(newRange);
 };
+
+export default restoreSelection
