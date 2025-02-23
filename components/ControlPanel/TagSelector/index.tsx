@@ -1,3 +1,4 @@
+import { useTextSelection } from '@/context/TextSelectionContext';
 import { ArrowDown01Icon } from '@/icons';
 import React, { useState, useRef, useEffect } from 'react';
 
@@ -26,9 +27,11 @@ const displayText: Record<TagSelectorProps['value'], string> = {
     H5: 'Heading 5',
 };
 
-const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange }) => {
+const TagSelector = ({ onChange }: { onChange: (newValue: TagSelectorProps['value']) => void }) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const { selectedText } = useTextSelection()
+    const tagName = selectedText?.mainElement.tagName
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -46,9 +49,9 @@ const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange }) => {
             {/* Selected option */}
             <div
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative -my-2 py-2 pl-2 pr-7 rounded cursor-pointer bg-transparent text-white hover:bg-yellow-500"
+                className="relative -my-2 py-2 pl-2 pr-7 rounded cursor-pointer bg-transparent hover:bg-yellow-500"
             >
-                {displayText[value]}
+                {displayText[tagName]}
                 <span
                     className={`absolute right-0 transition-transform duration-100 ${isOpen ? 'rotate-180' : ''}`}
                 >
@@ -58,7 +61,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange }) => {
 
             {/* Custom dropdown */}
             {isOpen && (
-                <ul className="absolute left-0 top-[40px] w-full bg-[#48442f] text-white rounded shadow-md mt-1 z-10">
+                <ul className="absolute left-0 top-[40px] w-full bg-white rounded shadow-md mt-1 z-10">
                     {options.map((option) => (
                         <li
                             key={option}

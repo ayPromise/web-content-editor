@@ -3,17 +3,21 @@
 @tailwind utilities;
 
 @font-face{
-    font-family: "UAF-Memory";
-    src: url("public/fonts/UAFMemory-Regular.otf") format('opentype');
+    font-family: "UAF-Sans";
+    src: url("public/fonts/UAFSans-Regular.ttf") format('opentype');
     font-weight: 500;
     font-style: normal;
 }
 
 *{
-    @apply font-[UAF-Memory] transition duration-300
+    @apply font-[UAF-Sans] transition duration-300 text-black
 }
 
 /*Editor*/
+
+#editor a {
+  @apply underline text-blue-400 pointer-events-auto cursor-pointer
+}
 
 #editor code {
   @apply bg-blue-100 text-black rounded py-1 px-2 before:content-['\`'] after:content-['\`']
@@ -40,7 +44,7 @@
 }
 
 #editor p {
-  @apply text-base leading-relaxed;
+  @apply text-base leading-relaxed inline-block;
 }
 #editor>*{
     @apply relative transition-[background-color] py-2
@@ -51,23 +55,23 @@
 }
 
 .dragged{
-    @apply bg-yellow-600
+    @apply bg-[#F39200]
 }
 
 .add-before::before{
-    @apply content-[""] block h-[4px] left-0 right-0 top-[-4px] bg-yellow-600 absolute
+    @apply content-[""] block h-[4px] left-0 right-0 top-[-4px] bg-[#F39200] absolute
 }
 
 .add-after::after{
-    @apply content-[""] block h-[4px] left-0 right-0 bottom-[-4px] bg-yellow-600 absolute
+    @apply content-[""] block h-[4px] left-0 right-0 bottom-[-4px] bg-[#F39200] absolute
 }
 
 .add-between::after {
-    @apply content-[""] block h-[4px] left-0 right-0 bottom-[-20px] bg-yellow-600 absolute
+    @apply content-[""] block h-[4px] left-0 right-0 bottom-[-20px] bg-[#F39200] absolute
 }
 
 .add-inside::after{
-    @apply content-[""] block h-full w-[4px] left-0 bottom-0 bg-yellow-600 absolute z-[-1];
+    @apply content-[""] block h-full w-[4px] left-0 bottom-0 bg-[#F39200] absolute z-[-1];
     left:var(--drop-left, 0px);
 }
 
@@ -85,5 +89,5 @@
 }
 
 .active{
-    @apply bg-yellow-700
+    @apply bg-[#F39200]
 }   

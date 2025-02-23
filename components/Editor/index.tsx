@@ -762,7 +762,7 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
                 onInput={handleInput}
                 contentEditable="plaintext-only"
                 id="editor"
-                className='text-white bg-[#48442f] focus:outline-none shadow-lg rounded-lg w-[1100px] pt-7 pb-3 pl-12 pr-10 flex flex-col gap-7 selection:bg-yellow-600 text-[17px] min-h-[1000px] overflow-y-auto'>
+                className='text-white bg-white focus:outline-none shadow-lg rounded-lg w-[1100px] pt-7 pb-3 pl-12 pr-10 flex flex-col gap-7 selection:bg-[#F39200] text-[17px] min-h-[1000px] overflow-y-auto px-4'>
             </div>
 
             <div onMouseMove={handleMouseMove} onDragStart={handleDraggStart} onDragEnd={handleDragEnd} draggable style={draggButtonStyles} className='dragButton'>

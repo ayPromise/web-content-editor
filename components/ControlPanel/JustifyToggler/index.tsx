@@ -1,14 +1,14 @@
+import { useTextSelection } from '@/context/TextSelectionContext';
 import { TextAlignJustifyCenterIcon, TextAlignJustifyLeftIcon, TextAlignJustifyRightIcon } from '@/icons';
 import React, { useState } from 'react'
 
-interface JustifyTogglerProps {
-    value: DOMTokenList | null | undefined
-}
 
-const JustifyToggler = ({ value }: JustifyTogglerProps) => {
+const JustifyToggler = () => {
     const [selectedAlignment, setSelectedAlignment] = useState<string>('start');
+    const { selectedText } = useTextSelection()
 
     const handleJustifyClick = (alignment: string) => {
+        const value = selectedText?.mainElement.classList
         if (value) {
             // Remove any existing justify-related classes before toggling
             value.remove("flex", "justify-center", "justify-start", "justify-end");
@@ -21,19 +21,19 @@ const JustifyToggler = ({ value }: JustifyTogglerProps) => {
     return (
         <div className="flex gap-2 mr-3">
             <span
-                className={`hover:bg-yellow-500 p-2 rounded cursor-pointer ${selectedAlignment === 'start' ? 'bg-yellow-700' : ''}`}
+                className={`hover:bg-yellow-500 p-2 rounded cursor-pointer ${selectedAlignment === 'start' ? 'active' : ''}`}
                 onClick={() => handleJustifyClick('start')}
             >
                 <TextAlignJustifyLeftIcon color="white" />
             </span>
             <span
-                className={`hover:bg-yellow-500 p-2 rounded cursor-pointer ${selectedAlignment === 'center' ? 'bg-yellow-600' : ''}`}
+                className={`hover:bg-yellow-500 p-2 rounded cursor-pointer ${selectedAlignment === 'center' ? 'active' : ''}`}
                 onClick={() => handleJustifyClick('center')}
             >
                 <TextAlignJustifyCenterIcon color="white" />
             </span>
             <span
-                className={`hover:bg-yellow-500 p-2 rounded cursor-pointer ${selectedAlignment === 'end' ? 'bg-yellow-600' : ''}`}
+                className={`hover:bg-yellow-500 p-2 rounded cursor-pointer ${selectedAlignment === 'end' ? 'active' : ''}`}
                 onClick={() => handleJustifyClick('end')}
             >
                 <TextAlignJustifyRightIcon color="white" />

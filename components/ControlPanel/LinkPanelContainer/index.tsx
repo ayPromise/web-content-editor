@@ -1,20 +1,18 @@
-import React, { useState } from "react";
-import Conditional from "@/components/Conditional";
+import React, { useEffect, useState } from "react";
 import LinkPanel from "./LinkPanel";
 import restoreSelection from "@/utils/restoreSelection";
 
 import { Link02Icon } from "@/icons";
-import { SelectedTextProps, useTextSelection } from "@/context/TextSelectionContext";
+import { useTextSelection } from "@/context/TextSelectionContext";
 
-interface LinkPanelContainerProps {
-    selectedText: SelectedTextProps | null;
-    onApply: (url: string) => void;
-}
-
-const LinkPanelContainer = ({ onApply }: LinkPanelContainerProps) => {
-    const { selectedText } = useTextSelection()
+const LinkPanelContainer = () => {
+    const { selectedText, handleTextSelect } = useTextSelection()
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [url, setUrl] = useState<string>("");
+
+    useEffect(() => {
+        if (!selectedText) return
+    }, [selectedText])
 
     const handleOpenPanel = () => {
         remainSelection();
@@ -23,9 +21,33 @@ const LinkPanelContainer = ({ onApply }: LinkPanelContainerProps) => {
 
     const handleUrlChangeSubmit = (newUrl: string) => {
         setUrl(newUrl);
-        onApply(newUrl);
         setIsOpen(false);
+        handleChangeElementToLink(newUrl)
     };
+
+    const handleChangeElementToLink = (newUrl: string) => {
+        // store the old state element
+        const oldElement = selectedText?.fromTextNode?.node.parentElement
+
+        // create a var for storing the new element with different newTag
+        const newElement = document.createElement("a")
+
+        // share the content and styles with new temp var
+        newElement.textContent = oldElement?.textContent
+        newElement.setAttribute("href", "https://youtube.com")
+        newElement.setAttribute("target", "_blank")
+        newElement.setAttribute("rel", "noopener noreferrer nofollow")
+
+        // render new element after the old one and remove it instantly
+        oldElement?.replaceChild(newElement, selectedText?.fromTextNode?.node)
+
+        // put cursor pointer on the start of the new element
+        restoreSelection(newElement, 0, 0)
+        // call the handler for stating the selection value
+        handleTextSelect()
+    }
+
+
 
     const remainSelection = () => {
         if (!selectedText?.fromTextNode) return;
@@ -44,9 +66,7 @@ const LinkPanelContainer = ({ onApply }: LinkPanelContainerProps) => {
                 <Link02Icon color="white" className="size-[18px]" />
             </span>
 
-            <Conditional showWhen={isOpen}>
-                <LinkPanel value={url} onSubmit={handleUrlChangeSubmit} />
-            </Conditional>
+            {isOpen && <LinkPanel value={url} onSubmit={handleUrlChangeSubmit} />}
         </>
     );
 };

@@ -18,7 +18,7 @@ import { useTextSelection } from '@/context/TextSelectionContext';
 
 
 const ControlPanel = () => {
-    const { selectedText } = useTextSelection()
+    const { selectedText, handleTextSelect } = useTextSelection()
 
     const { stylingState, setStylingState } = useTextStyling(selectedText)
 
@@ -124,7 +124,7 @@ const ControlPanel = () => {
 
 
     return (
-        <div className='bg-[#48442f] shadow-md rounded-lg w-full px-9 flex flex-row gap-4 justify-between py-2'>
+        <div className='bg-white shadow-md rounded-lg w-full px-9 flex flex-row gap-4 justify-between py-2'>
             <div className='flex gap-1 items-center'>
                 <ToolbarButton isActive={stylingState.bold} onClick={() => applyStyle("font-bold", stylingState.bold, selectedText)}>
                     <TextBoldIcon color="white" />
@@ -146,14 +146,14 @@ const ControlPanel = () => {
                     <SourceCodeIcon color='white' />
                 </ToolbarButton>
 
-                <LinkPanelContainer selectedText={selectedText} onApply={(url) => setStylingState({ ...stylingState, linkURL: url })} />
+                <LinkPanelContainer />
 
             </div>
 
             <Conditional showWhen={!!selectedText?.mainElement}>
                 <div className='flex items-center h-full w-full'>
-                    <JustifyToggler value={selectedText?.mainElement.classList} />
-                    <TagSelector value={selectedText?.mainElement.tagName} onChange={handleChangeTagName} />
+                    <JustifyToggler />
+                    <TagSelector onChange={handleChangeTagName} />
                 </div>
             </Conditional>
         </div>
