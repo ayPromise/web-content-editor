@@ -418,6 +418,24 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
 
     }
 
+    const handleClick = (event: MouseEvent) => {
+        let target = event.target as HTMLElement;
+
+        // check if we did click on hyperlink
+        if (target.tagName === "A") {
+            event.preventDefault(); // Prevent selection
+            window.open(target.getAttribute("href")!, "_blank"); // Open in new tab
+        }
+
+        // check if we did click on hyperlink that is parentelement
+        target = target.parentElement
+
+        if (target.tagName === "A") {
+            event.preventDefault(); // Prevent selection
+            window.open(target.getAttribute("href")!, "_blank"); // Open in new tab
+        }
+    };
+
 
 
     useEffect(() => {
@@ -760,6 +778,7 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
                 onDragOver={handleDraggOver}
                 onDrop={handleDrop}
                 onInput={handleInput}
+                onClick={handleClick}
                 contentEditable="plaintext-only"
                 id="editor"
                 className='text-white bg-white focus:outline-none shadow-lg rounded-lg w-[1100px] pt-7 pb-3 pl-12 pr-10 flex flex-col gap-7 selection:bg-[#F39200] text-[17px] min-h-[1000px] overflow-y-auto px-4'>
