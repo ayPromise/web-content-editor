@@ -26,17 +26,20 @@ export const TextSelectionProvider = ({ children }: { children: ReactNode }) => 
 
     const handleTextSelect = () => {
         const selection = window.getSelection();
-        if (!selection) return;
+        if (!selection) return
 
         const editor = document.getElementById("editor");
         const selectedNode = selection.anchorNode;
-        if (!selectedNode) return;
+        if (!selectedNode) {
+            //setSelectedText(null)
+            return;
+        }
 
         // Отримуємо реальні індекси вибраного тексту
         const start = Math.min(selection.anchorOffset, selection.focusOffset);
         const end = Math.max(selection.anchorOffset, selection.focusOffset);
 
-        if (!editor?.contains(selection.baseNode)) return;
+        if (!editor?.contains(selection.baseNode)) return
 
         // Знаходимо кореневий елемент вибору
         let lastChildOfEditor = selection.baseNode;
@@ -52,36 +55,40 @@ export const TextSelectionProvider = ({ children }: { children: ReactNode }) => 
 
         if (range.startContainer !== range.endContainer) {
             const orderedNodes: SelectedNode[] = [];
-            let firstNode: SelectedNode = {
+            let current: SelectedNode = {
                 node: startContainer,
                 startIndex: range.startOffset,
                 endIndex: startContainer.textContent?.length as number
             };
 
-            const lastNode: SelectedNode = {
+            const last: SelectedNode = {
                 node: endContainer,
                 startIndex: 0,
                 endIndex: range.endOffset
             };
 
-            // Перетворюємо HTML-елементи в текстові ноди
-            if (lastNode.node.nodeType !== Node.TEXT_NODE) {
-                lastNode.node = getTextNode(lastNode.node as HTMLElement, lastNode.startIndex, lastNode.endIndex) as Text;
-                lastNode.startIndex = 0;
-                lastNode.endIndex = lastNode.node.textContent?.length as number;
+            // transform HTML into Text Node
+            if (last.node.nodeType !== Node.TEXT_NODE) {
+                last.node = getTextNode(last.node as HTMLElement, last.startIndex, last.endIndex) as Text;
+                last.startIndex = 0;
+                last.endIndex = last.node.textContent?.length as number;
             }
-            if (firstNode.node.nodeType !== Node.TEXT_NODE) {
-                firstNode.node = getTextNode(firstNode.node as HTMLElement, firstNode.startIndex, firstNode.endIndex) as Text;
-                firstNode.startIndex = 0;
-                firstNode.endIndex = firstNode.node.textContent?.length as number;
+            if (current.node.nodeType !== Node.TEXT_NODE) {
+                current.node = getTextNode(current.node as HTMLElement, current.startIndex, current.endIndex) as Text;
+                current.startIndex = 0;
+                current.endIndex = current.node.textContent?.length as number;
             }
 
-            // Проходимо всі ноди між початковою і кінцевою
-            while (firstNode.node !== lastNode.node) {
-                orderedNodes.push(firstNode);
-                const element = firstNode.node.parentElement !== lastChildOfEditor
-                    ? firstNode.node.parentElement?.nextSibling
-                    : firstNode.node.nextSibling;
+            // go through from start to end
+            while (current.node !== last.node) {
+                orderedNodes.push(current);
+                let parent = current.node.parentElement
+                // if we are still inside lastChildOfEditor we go up
+                if (parent?.parentElement.tagName === "A")
+                    parent = parent.parentElement
+                const element = parent !== lastChildOfEditor
+                    ? parent?.nextSibling
+                    : current.node.nextSibling;
 
                 if (!element) break;
                 const nextSiblingTextNode = element.nodeType !== Node.TEXT_NODE
@@ -90,10 +97,10 @@ export const TextSelectionProvider = ({ children }: { children: ReactNode }) => 
 
                 if (!nextSiblingTextNode) break;
 
-                firstNode = { node: nextSiblingTextNode as Node, startIndex: 0, endIndex: nextSiblingTextNode.textContent?.length as number };
+                current = { node: nextSiblingTextNode as Node, startIndex: 0, endIndex: nextSiblingTextNode.textContent?.length as number };
             }
 
-            orderedNodes.push(lastNode);
+            orderedNodes.push(last);
             setSelectedText({ orderedNodes, multipleNodes: true, mainElement: lastChildOfEditor });
         } else {
             setSelectedText({ fromTextNode: aloneNode, mainElement: lastChildOfEditor });
