@@ -8,22 +8,7 @@ import restoreSelection from "./restoreSelection"
         let previousSibling : HTMLElement|null = fromElement?.previousSibling  ? fromElement.previousSibling as HTMLElement : null
         let nextSibling: HTMLElement|null = fromElement?.nextSibling ? fromElement.nextSibling as HTMLElement : null
 
-        if(nextSibling?.nodeType === Node.TEXT_NODE)
-        {
-                nextSibling = nextSibling.nextSibling
-        }
-
-        if(previousSibling?.nodeType === Node.TEXT_NODE)
-        {
-                previousSibling = previousSibling.previousSibling
-        }
-
-        if(nextSibling?.nodeType === Node.TEXT_NODE && previousSibling?.nodeType === Node.TEXT_NODE)
-        {
-                fromElement.parentElement?.normalize()
-                console.log("wtf")
-                return null
-        }
+        console.log( previousSibling, fromElement, nextSibling)
 
         const appliedStylesToSelectedNode:string[] = Array.from(fromElement.classList).sort()
         const previousSiblingStyles:string[]|null = previousSibling && previousSibling?.nodeType !== Node.TEXT_NODE ? Array.from(previousSibling.classList).sort() : null
