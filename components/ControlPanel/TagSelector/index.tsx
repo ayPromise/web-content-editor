@@ -31,6 +31,7 @@ const TagSelector = ({ onChange }: { onChange: (newValue: TagSelectorProps['valu
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { selectedText } = useTextSelection()
+
     const tagName = selectedText?.mainElement.tagName
 
     // Close dropdown on outside click
@@ -55,7 +56,7 @@ const TagSelector = ({ onChange }: { onChange: (newValue: TagSelectorProps['valu
                 <span
                     className={`absolute right-0 transition-transform duration-100 ${isOpen ? 'rotate-180' : ''}`}
                 >
-                    <ArrowDown01Icon color="white" />
+                    {displayText[tagName] && <ArrowDown01Icon color="white" />}
                 </span>
             </div>
 

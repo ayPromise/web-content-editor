@@ -16,7 +16,7 @@
 /*Editor*/
 
 #editor a {
-  @apply underline text-blue-400 pointer-events-auto cursor-pointer
+  @apply underline text-blue-400 pointer-events-auto cursor-pointer hover:text-blue-300
 }
 
 #editor code {
@@ -44,10 +44,14 @@
 }
 
 #editor p {
-  @apply text-base leading-relaxed inline-block;
+  @apply text-base leading-relaxed;
 }
 #editor>*{
     @apply relative transition-[background-color] py-2
+}
+
+#editor span{
+  @apply text-inherit
 }
 
 .empty{
