@@ -1,6 +1,5 @@
 import { StylingStateProps } from "@/hooks/useTextStyling";
 
-
 // Припустимо, що SelectedNode виглядає приблизно так:
 export interface SelectedNode {
   node: { parentElement: HTMLElement | null };
@@ -19,20 +18,40 @@ const checkSelectedStyle = (
     { className:"line-through", key:"lineThrough"}
   ];
 
- if (listOfElements && listOfElements.length > 0) {
-    // Якщо передано список, перевіряємо, чи всі вузли мають потрібний клас
+
+ if (listOfElements && listOfElements.length > 0) 
+  {
+    // check for styles in a row of element
     styles.forEach(({ className, key }) => {
       result[key] = listOfElements.every(
         el => el.node.parentElement?.classList?.contains(className));
     });
+
+    for (const el of listOfElements) {
+      const anchor = el.node.parentElement.closest("a");
+      
+      if (!anchor) {
+          result.linkURL = '';
+          return result;
+      }
+
+      result.linkURL = anchor.getAttribute("href")
+    }
   } else if (element) {
-    // Інакше перевіряємо тільки один елемент
+    // check for style in a single element
     styles.forEach(({ className, key }) => {
       result[key] = element.classList?.contains(className) ?? false;
     });
+
+    const anchor = element.closest("a");
+    if(anchor)
+      result.linkURL = anchor.getAttribute("href")
+
+
   }
 
   return result;
+
 };
 
 export default checkSelectedStyle;
