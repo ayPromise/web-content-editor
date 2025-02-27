@@ -29,12 +29,15 @@ const multipleApplyStyle = (style: string, isApplied: boolean, selectedText:Sele
             if (currentElement.parentElement.parentElement && currentElement.parentElement.parentElement.id !== 'editor')
                 currentElement = currentElement.parentElement
 
+            // now we also depend on tag name of selected element
+            const tagName = nodeObject.node.parentElement?.tagName === "P" ? 'SPAN' : nodeObject.node.parentElement?.tagName as string
+            
             // disassemble the element
             const elementObj: {
                 fromElement: Node;
                 startIndex: number;
                 endIndex: number | undefined;
-            } = disassembleElement(currentElement, nodeObject.startIndex, nodeObject.endIndex, style, isApplied, 'span')
+            } = disassembleElement(currentElement, nodeObject.startIndex, nodeObject.endIndex, style, isApplied, tagName)
 
             disassembledArray.push(elementObj)
         })
@@ -82,13 +85,17 @@ const multipleApplyStyle = (style: string, isApplied: boolean, selectedText:Sele
             return
         }
 
-        if (!isApplied) {
-            // if we took element on parts by removing class we select all letter
-            restoreSelectionForMultipleNodes(first.fromElement, last.fromElement, 0, last.fromElement.textContent?.length as number)
-        } else {
-            // if we build element in one piece by adding class we select letter from startIndex and lastIndex
-            restoreSelectionForMultipleNodes(first.fromElement, last.fromElement, first.startIndex, last.endIndex as number)
-        }
+        // if (!isApplied) {
+        //     console.log(first.fromElement, last.fromElement)
+        //     // if we took element on parts by removing class we select all letter
+        //     restoreSelectionForMultipleNodes(first.fromElement, last.fromElement, first.startIndex, last.endIndex as number)
+        // } else {
+        //     // if we build element in one piece by adding class we select letter from startIndex and lastIndex
+        //     restoreSelectionForMultipleNodes(first.fromElement, last.fromElement, first.startIndex, last.endIndex as number)
+        // }
+
+        restoreSelectionForMultipleNodes(first.fromElement, last.fromElement, first.startIndex, last.endIndex as number)
+
 
     }
 
