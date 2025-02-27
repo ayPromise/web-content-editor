@@ -9,7 +9,14 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
         return;
     }
 
-    const isTextNode = element.nodeType === 3
+    const isInsideAnchor = withTag === "A";
+    const parentAttributes = isInsideAnchor ? {
+        href: element.getAttribute("href"),
+        target: element.getAttribute("target"),
+        rel: element.getAttribute("rel"),
+    } : null;
+
+    const isTextNode : boolean = element.nodeType === 3
 
 
     // we rememeber the parts divided
@@ -31,7 +38,7 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
     // if it still has classes - we dont mind about text node and declare the span element
     if(isTextNode && !isAppliedStyle)
     {
-        theSelectedElement = document.createElement(withTag)
+        theSelectedElement = document.createElement('span')
         theSelectedElement.classList.add(className)
         theSelectedElement.textContent = theSelectedPart
     }
@@ -51,6 +58,22 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
         else
             theSelectedElement.classList.add(className)
     }
+
+    if (isInsideAnchor) {
+        
+        const anchorElement = document.createElement("a");
+        anchorElement.setAttribute("href", parentAttributes.href);
+        anchorElement.setAttribute("target", parentAttributes.target);
+        anchorElement.setAttribute("rel", parentAttributes.rel);
+        
+        theSelectedElement = document.createElement('span')
+        theSelectedElement.classList.add(className)
+        theSelectedElement.textContent = theSelectedPart
+
+        anchorElement.appendChild(theSelectedElement);
+        theSelectedElement = anchorElement;
+    }
+
 
 
     // declare the next element with styles and remembered part
@@ -97,7 +120,7 @@ const disassembleElement = (element:HTMLElement | Text, startIndex:number, endIn
     if(!nextElement.textContent) nextElement.remove()
 
 
-    if(theSelectedElement.nodeType !== Node.TEXT_NODE)
+    if(theSelectedElement.nodeType !== Node.TEXT_NODE && theSelectedElement.tagName !== "A")
     {
         // we try to merge sibling elements if it is possible
         const changedElementObj = mergingSameClassesElements(theSelectedElement as HTMLElement)
