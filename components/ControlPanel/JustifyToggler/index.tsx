@@ -1,22 +1,37 @@
 import { useTextSelection } from '@/context/TextSelectionContext';
+import useTextState from '@/hooks/useTextState';
 import { TextAlignJustifyCenterIcon, TextAlignJustifyLeftIcon, TextAlignJustifyRightIcon } from '@/icons';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
+
+const getAlignment = (element: HTMLElement | null): string => {
+    if (!element) return "none";
+    if (element.classList.contains("justify-center")) return "center";
+    if (element.classList.contains("justify-end")) return "end";
+    if (element.classList.contains("justify-start")) return "start";
+
+    return 'none';
+};
 
 const JustifyToggler = () => {
-    const [selectedAlignment, setSelectedAlignment] = useState<string>('start');
     const { selectedText } = useTextSelection()
+    const [selectedAlignment, setSelectedAlignment] = useState<string>(() => getAlignment(selectedText?.mainElement));
+    const { handleTextChange } = useTextState()
 
     const handleJustifyClick = (alignment: string) => {
         const value = selectedText?.mainElement.classList
+        const editor = document.getElementById("editor")
         if (value) {
-            // Remove any existing justify-related classes before toggling
             value.remove("flex", "justify-center", "justify-start", "justify-end");
-            // Add the clicked alignment class
             value.add('flex', `justify-${alignment}`);
             setSelectedAlignment(alignment);
+            handleTextChange(editor?.innerHTML as string)
         }
     };
+
+    useEffect(() => {
+        setSelectedAlignment(getAlignment(selectedText?.mainElement))
+    }, [selectedText]);
 
     return (
         <div className="flex gap-2 mr-3">
