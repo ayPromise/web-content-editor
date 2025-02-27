@@ -27,7 +27,7 @@ const useTextStyling = (selectedText: SelectedTextProps | null) => {
     const selectedElement = selectedText.fromTextNode?.node.parentElement as HTMLElement;
     const orderedList = selectedText?.orderedNodes;
 
-    const { bold, italic, underline, lineThrough } = checkSelectedStyle(selectedElement, orderedList);
+    const { bold, italic, underline, lineThrough, linkURL } = checkSelectedStyle(selectedElement, orderedList);
 
     setStylingState((prev) => ({
       ...prev,
@@ -35,6 +35,7 @@ const useTextStyling = (selectedText: SelectedTextProps | null) => {
       italic,
       underline,
       lineThrough,
+      linkURL
     }));
   }, [selectedText]);
 
