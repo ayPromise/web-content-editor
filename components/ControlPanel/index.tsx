@@ -15,16 +15,19 @@ import ToolbarButton from './ToolBarButton';
 import { SourceCodeIcon, TextBoldIcon, TextItalicIcon, TextStrikethroughIcon, TextUnderlineIcon } from '@/icons';
 import LinkPanelContainer from './LinkPanelContainer';
 import { useTextSelection } from '@/context/TextSelectionContext';
+import useTextState from '@/hooks/useTextState';
 
 
 const ControlPanel = () => {
     const { selectedText, handleTextSelect } = useTextSelection()
+    const { handleTextChange } = useTextState()
 
     const { stylingState, setStylingState } = useTextStyling(selectedText)
 
     const handleChangeTagName = (newTag: string) => {
         // store the old state element
         const oldElement = selectedText?.mainElement
+        const editor = document.getElementById("editor")
 
         // change nothing when we set current tag
         if (newTag === oldElement?.tagName) return
@@ -40,6 +43,8 @@ const ControlPanel = () => {
         oldElement?.after(newElement)
         oldElement?.remove()
 
+        handleTextChange(editor?.innerHTML as string)
+
         // put cursor pointer on the start of the new element
         restoreSelection(newElement, 0, 0)
         // call the handler for stating the selection value
@@ -53,19 +58,19 @@ const ControlPanel = () => {
             event.preventDefault()
             switch (event.key) {
                 case 'b':
-                    handleApplyStyle('font-bold', stylingState.bold);
+                    applyStyle('font-bold', stylingState.bold, selectedText);
                     break;
                 case 'i':
-                    handleApplyStyle('italic', stylingState.italic);
+                    applyStyle('italic', stylingState.italic, selectedText);
                     break;
                 case 'u':
-                    handleApplyStyle('underline', stylingState.underline);
+                    applyStyle('underline', stylingState.underline, selectedText);
                     break;
                 case 's':
-                    handleApplyStyle('line-through', stylingState.lineThrough);
+                    applyStyle('line-through', stylingState.lineThrough, selectedText);
                     break;
                 case '`':
-                    handleApplyStyle('code', stylingState.code);
+                    applyStyle('code', stylingState.code, selectedText);
                     break;
                 default:
                     break;
