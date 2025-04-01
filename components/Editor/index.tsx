@@ -286,17 +286,16 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
         const range = selection?.getRangeAt(0)
 
         // retrive data of selected TextNode and replace text in the drop place
-        const draggedText: string = event.dataTransfer?.getData("selectedText")
+        const draggedContent: DocumentFragment = range?.cloneContents() as DocumentFragment
         const selectedNode: Node = selection?.getRangeAt(0).startContainer as Node
-        let sameElementFlag: boolean = false
 
-        if (draggedText && dropPosition.fromElement) {
+        const start = dropPosition.affectedNode?.textContent?.indexOf(draggedContent.textContent as string)
+        if (dropPosition.affectedNode === selectedNode && start < dropPosition.charIndex) {
+            return
+        }
+
+        if (draggedContent && dropPosition.fromElement) {
             setIsTextDragged(false)
-            // because we hold textNode we must compare it by checking the contain condition
-            if (dropPosition.fromElement.contains(selectedNode)) {
-                selectedNode.textContent = selectedNode.textContent.replace(draggedText, "")
-                sameElementFlag = true
-            }
 
             // now we decide what index is for dropping by dropDirection
             const insertIndex = dropPosition.dropDirection === "left"
@@ -312,39 +311,34 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
 
             const selectedElement = selectedNode.parentElement
 
-            const draggedTextElement = document.createElement(selectedElement.tagName)
-            draggedTextElement.textContent = draggedText
+            if (draggedContent.childNodes.length === 1) {
+                const clonedParent = selectedElement.cloneNode(true) as HTMLElement
+                const draggedElement = clonedParent
+                draggedElement.textContent = draggedContent.firstChild?.textContent
 
-            if (selectedElement.classList && selectedElement.classList.length > 0)
-                draggedTextElement.classList.add(...Array.from(selectedElement.classList))
+                if (splittedElement.nodeType === 3) {
+                    dropPosition.fromElement.insertBefore(draggedElement, splittedElement)
+                } else
+                    splittedElement.insertAdjacentElement("afterend", draggedElement)
 
-            // place the dragged text into dropElement
+                range?.setStartBefore(draggedElement)
+                range?.setEndAfter(draggedElement)
+
+                selectedElement.innerHTML = selectedElement.innerHTML.replace(draggedContent.firstChild?.textContent as string, "")
+
+            } else {
+                const draggedElements = Array.from(draggedContent.childNodes)
+                splittedElement.after(...draggedElements)
+                range?.deleteContents()
+                range?.setStartBefore(draggedElements[0])
+                range?.setEndAfter(draggedElements[draggedElements.length - 1])
+            }
+
+            // place the dragged text into empty dropElement
             if (dropPosition.fromElement.innerHTML === "<br>") {
                 dropPosition.fromElement.innerHTML = ""
-                dropPosition.fromElement.appendChild(draggedTextElement)
+                dropPosition.fromElement.appendChild(draggedContent)
             }
-            else {
-                if (splittedElement.nodeType === 3) {
-                    dropPosition.fromElement.insertBefore(draggedTextElement, splittedElement)
-                } else
-                    splittedElement.insertAdjacentElement("afterend", draggedTextElement)
-            }
-
-            // remove the dragged text from initial element 
-            const parentElement = selectedNode.parentElement
-            if (selectedNode.textContent && selectedNode !== dropPosition.fromElement) {
-                selectedNode.textContent = selectedNode.textContent.replace(draggedText, "")
-
-            }
-
-            // we cant leave the element empty so we put <br> into  
-            if (parentElement && parentElement.textContent.trim() === "") {
-                parentElement.innerHTML = "<br>"
-            }
-
-            range?.setStartBefore(draggedTextElement)
-            range?.setEndAfter(draggedTextElement)
-
 
             // we save changes in popped stated
             if (editorRef.current)
@@ -418,26 +412,8 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
 
     }
 
-    const handleTextDragStart = (event: DragEvent) => {
-
-        if (!selection) return
-
-        const selectedNode = selection.anchorNode;
-        if (!selectedNode) return
-
-        // get the real start and end of selected text
-        const start = Math.min(selection.anchorOffset, selection.focusOffset);
-        const end = Math.max(selection.anchorOffset, selection.focusOffset);
-
-
-        // grab only selected part
-        const selectedText = selectedNode.textContent?.slice(start, end);
-        if (!selectedText) return
-
-        // remember selected part
-        event.dataTransfer.setData("selectedText", selectedText)
+    const handleTextDragStart = () => {
         setIsTextDragged(true)
-
     }
 
     const handleClick = (event: MouseEvent) => {

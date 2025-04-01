@@ -75,7 +75,7 @@
 }
 
 .add-inside::after{
-    @apply content-[""] block h-full w-[4px] left-0 bottom-0 bg-[#F39200] absolute opacity-50;
+    @apply content-[""] block h-1/2 w-[4px] left-0 bottom-1/2 translate-y-1/2 bg-[#F39200] absolute opacity-50;
     left:var(--drop-left, 0px);
 }
 
