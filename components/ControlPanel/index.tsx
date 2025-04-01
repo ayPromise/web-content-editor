@@ -2,7 +2,6 @@ import React, { useEffect } from 'react'
 
 // importing utils
 import restoreSelection from '@/utils/restoreSelection';
-import wrapSelectedText from '@/utils/wrapSelectedText';
 import applyStyle from '@/utils/applyStyle'
 import checkSelectedStyle from '@/utils/checkSelectedStyle';
 
@@ -12,7 +11,7 @@ import Conditional from '../Conditional';
 import JustifyToggler from './JustifyToggler';
 import useTextStyling from '@/hooks/useTextStyling';
 import ToolbarButton from './ToolBarButton';
-import { SourceCodeIcon, TextBoldIcon, TextItalicIcon, TextStrikethroughIcon, TextUnderlineIcon } from '@/icons';
+import { TextBoldIcon, TextItalicIcon, TextStrikethroughIcon, TextUnderlineIcon } from '@/icons';
 import LinkPanelContainer from './LinkPanelContainer';
 import { useTextSelection } from '@/context/TextSelectionContext';
 import useTextState from '@/hooks/useTextState';
@@ -78,38 +77,6 @@ const ControlPanel = () => {
         }
     };
 
-    const wrapToTheCodeTag = () => {
-        if (!selectedText) return
-
-        // we cant make multiple nodes as code element
-        if (selectedText.multipleNodes) {
-            return
-        }
-
-        // dont apply changes if we did select nothing
-        if (selectedText.fromTextNode?.startIndex === selectedText.fromTextNode?.endIndex) return
-
-        // to prevent eslint arguing
-        if (!selectedText.fromTextNode) return
-
-        const { node, startIndex, endIndex } = selectedText.fromTextNode
-
-        // if it already has code tag we toggle it down making textNode
-        if (node.parentElement?.tagName === "CODE") {
-            const textNode = document.createTextNode(node.textContent)
-            node.parentElement.after(textNode)
-            node.parentElement.remove()
-            restoreSelection(textNode as Node, 0, textNode.textContent?.length as number)
-            selectedText.mainElement.normalize()
-            return
-        }
-
-        // or we wrap it with <code> tags
-        const wrappedTextNode = wrapSelectedText(node, startIndex, endIndex, "", "CODE")
-
-        restoreSelection(wrappedTextNode as Node, 0, wrappedTextNode?.textContent?.length as number)
-    }
-
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
         return () => {
@@ -145,10 +112,6 @@ const ControlPanel = () => {
 
                 <ToolbarButton isActive={stylingState.lineThrough} onClick={() => applyStyle("line-through", stylingState.lineThrough, selectedText)}>
                     <TextStrikethroughIcon color='white' />
-                </ToolbarButton>
-
-                <ToolbarButton isActive={stylingState.code} onClick={wrapToTheCodeTag}>
-                    <SourceCodeIcon color='white' />
                 </ToolbarButton>
 
                 <LinkPanelContainer />

@@ -55,11 +55,11 @@
 }
 
 .empty{
-    @apply before:content-[attr(data-placeholder)] before:absolute text-gray-200
+    @apply before:content-[attr(data-placeholder)] before:absolute text-gray-400
 }
 
 .dragged{
-    @apply bg-[#F39200]
+    @apply bg-[#f39200b5]
 }
 
 .add-before::before{

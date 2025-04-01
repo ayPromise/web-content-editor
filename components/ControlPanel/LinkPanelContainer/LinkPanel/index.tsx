@@ -17,8 +17,13 @@ const LinkPanel: React.FC<LinkPanelProps> = ({ value, onSubmit }) => {
     };
 
     const handleSubmit = () => {
-        if (inputValue.trim()) {
+        const urlExpression = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/
+        const regex = new RegExp(urlExpression)
+        const urlValue = inputValue.trim()
+        if (urlValue.match(regex)) {
             onSubmit(inputValue);
+        } else {
+            alert("Type the correct url")
         }
     };
 

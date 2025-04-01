@@ -7,6 +7,7 @@ import mergingSameClassesElements from '@/utils/mergingSameClassesElements';
 import restoreSelection from '@/utils/restoreSelection';
 import restoreSelectionForMultipleNodes from '@/utils/restoreSelectionForMultipleNodes';
 import React, { useEffect, useRef, useState } from 'react'
+import { TagSelectorProps } from '../ControlPanel/TagSelector';
 
 interface DropPositionProps {
     position: "before" | "after" | "between" | "inside",
@@ -52,9 +53,14 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
 
         const draggableButton = e.target as EventTarget
         setDraggButtonVisible(false)
-        const editorsElement = document.elementFromPoint(e.clientX + 100, e.clientY)
+        let editorsElement = document.elementFromPoint(e.clientX + 100, e.clientY)
         // editorsElement now is a element we want to move around
         if (!editorsElement) return
+
+        // we drag the whole element
+        while (editorsElement.parentElement?.id !== "editor")
+            editorsElement = editorsElement.parentElement
+
 
         // make him draggable
         editorsElement.setAttribute("draggable", "true");
@@ -194,8 +200,14 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
             hoveredElement = document.elementFromPoint(mouseX + 100, mouseY)
         }
 
+
+        if (hoveredElement.id !== "editor" && hoveredElement.parentElement.id !== 'editor') {
+            hoveredElement = hoveredElement.parentElement
+        }
+
         // if still we have no element or it is still editor we go back
         if (!hoveredElement || hoveredElement.id === "editor") return
+
 
         // now we know that we did hover something and we clear styles on previous hovered element
         if (dropPosition.fromElement) {
@@ -266,6 +278,7 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
         dropPosition.fromElement.classList.remove("add-before", "add-after", "add-between", "add-inside")
 
         const range = selection?.getRangeAt(0)
+
 
         // retrive data of selected TextNode and replace text in the drop place
         const draggedText: string = event.dataTransfer.getData("selectedText")
@@ -412,6 +425,7 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
         const selectedText = selectedNode.textContent?.slice(start, end);
         if (!selectedText) return
 
+
         // remember selected part
         event.dataTransfer.setData("selectedText", selectedText)
         setIsTextDragged(true)
@@ -478,13 +492,15 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
                     lastPlaceholderNode.classList.remove("empty");
                 }
 
-                const placeholders = {
+                const placeholders: Record<TagSelectorProps['value'], string> = {
                     P: "Paragraph",
                     H1: "Heading 1",
                     H2: "Heading 2",
                     H3: "Heading 3",
                     H4: "Heading 4",
-                    H5: "Heading 5"
+                    H5: "Heading 5",
+                    UL: "Bullet List",
+                    OL: "Ordered List"
                 };
 
                 const tagName = selectedNode.tagName;

@@ -1,0 +1,241 @@
+[33mcommit 502ab66c1af3ee724b7715170484fa4a29219335[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:41:50 2025 +0200
+
+    not important changes
+
+[33mcommit 846611293e71460ad2aa8b6af7ccf75e2afb1c32[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:41:33 2025 +0200
+
+    CONTEXT / UPDATE / picking ordered list depends on <a>
+
+[33mcommit 393fa14393abda29beb90d8ddc1a9ad832658796[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:40:14 2025 +0200
+
+    HOOKS / UPDATE / HTML content saves in localStorage
+
+[33mcommit 73bd6dee15c895f3271e5b262b310808d11baa0a[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:39:50 2025 +0200
+
+    HOOKS / UPDATE / styling state now track linkUrL property
+
+[33mcommit 27ff023007296110d15a19236d83d750edb2afc0[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:38:31 2025 +0200
+
+    added new icon
+
+[33mcommit 3b04f0f1712aa0f6c361abb126aa3013ed0a79e9[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:38:02 2025 +0200
+
+    UTILS / UPDATE / now stylingState checks for <a>
+
+[33mcommit 369ca8db04b28bd21e06231a7898dfdf68fd3037[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:37:40 2025 +0200
+
+    UTILS / UPDATE / now dissemble works for <a>
+
+[33mcommit e6d5e6ce647aae44afb840dea8a787f8dc3c3ce4[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:37:05 2025 +0200
+
+    UTILS / UPDATED / removed the unworking code
+
+[33mcommit 71ab29dace4edd25fa2626f11786a1f732a19224[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:36:47 2025 +0200
+
+    UTILS / UPDATE / removed the unworking code
+
+[33mcommit 0b55d85204831655592dbb7b0fde3acd53a2fad8[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:36:12 2025 +0200
+
+    UTILS / NEW / added function for splitting HTML element
+
+[33mcommit 10f4b964dcbbf1c7409643e5e4c7db8a7d0435b6[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:34:58 2025 +0200
+
+    we manually redirect by clicking on link
+
+[33mcommit c51dccd7086e31dc5b2459bbdebd4d9f0b2a68a4[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:26:44 2025 +0200
+
+    changed logic of rendering the link panel
+
+[33mcommit 19d59600c076a032913c0d457557604483790b9f[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:26:12 2025 +0200
+
+    now we can wrap elements in anchor tag
+
+[33mcommit e53121083f19917f20b38b8433336b4e677a7b8e[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:25:45 2025 +0200
+
+    alignment depends on what user did select
+
+[33mcommit 793f73ebbd46237a545efa95c81e91cdf50a759d[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 27 17:25:16 2025 +0200
+
+    fixed applying styles by keys
+
+[33mcommit 669045fad61fafd8a597caf23066b2095ec67231[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Sun Feb 23 20:24:23 2025 +0200
+
+    implemented selection hook into components
+
+[33mcommit 768a41a7c28c5048a8742e8000ca6c0548126bc2[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Wed Feb 19 15:28:01 2025 +0200
+
+    HUGE patch - added context for selectedText - decomponised some large files
+
+[33mcommit 77d9736b8f3c40f5e3bbcfc50c15b2443246d1e4[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 03:56:02 2025 +0200
+
+    more fixes to merging logic
+
+[33mcommit a9b41c3cefdbecd0361756700dc38aba65089543[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 03:44:42 2025 +0200
+
+    Control Panel v0.2.2 - now we can wrap textnode and element into code tag
+
+[33mcommit d3f42eb798ebc37afcfc22104f5991ce55058616[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 03:43:58 2025 +0200
+
+    Editor v0.2.1 - normilizing after input, removing stlye attribute from child of editor
+
+[33mcommit f8f0bd92fafc5de4341095a651a289fb94cd1bad[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 03:42:55 2025 +0200
+
+    UTILS / UPDATE / now we can wrap a textnode into another tag of element
+
+[33mcommit 576db6ba304c9587626ef399b10173428d7052d7[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 03:42:25 2025 +0200
+
+    UTILS / UPDATE / fixed merging by not providing element as orientier anymore
+
+[33mcommit a58d9cd2af0e9cd9d6b725568699e9d853af0aff[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 03:41:54 2025 +0200
+
+    UTILS / UPDATE / fixed merging
+
+[33mcommit 3442800e02af816a0f7d050ff809ff88fdbb514f[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 03:41:11 2025 +0200
+
+    small changes in style of code element
+
+[33mcommit b6729817af2ebdee0f00e0acbe5cabd20284ab61[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:55:47 2025 +0200
+
+    EditorContainer v0.1.5 - Now it stores more complex states
+
+[33mcommit 80f51b8638a79c3793363a8f6c23ba1ba857bae3[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:55:18 2025 +0200
+
+    Editor v0.2.0 - a lot we did there btw
+
+[33mcommit f3c7311466d89f3b8cb0043c9b315651a46695e6[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:54:50 2025 +0200
+
+    Control Panel v0.1.0 - It has applying styles, justify element and changing Tag
+
+[33mcommit 6a8bf1b41d0b1d8b1eab9c6cb90c4506aa346e16[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:54:00 2025 +0200
+
+    UTILS / NEW / added function to check for applied styles on element user selected
+
+[33mcommit 472b54354f56443e4c1b9451e1fb7da863908ba1[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:53:28 2025 +0200
+
+    UTILS / NEW / function to get the text node from element at the proper position
+
+[33mcommit c7633df1eafb5aa63c24679df29ef759a3170935[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:53:06 2025 +0200
+
+    UTILS / NEW / function for comparing two arrays
+
+[33mcommit d161ba879a131317a4b664bebaed80fedf540c15[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:52:36 2025 +0200
+
+    added new Font
+
+[33mcommit f6f6ab30ef57a0e9bdc19d9af0d3e3d6a11e5cd7[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:52:28 2025 +0200
+
+    UTILS / NEW / added function that take element into pieces after applying styles
+
+[33mcommit fa54f6d73096822ded8a46bab40a9604989d5dfe[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:51:55 2025 +0200
+
+    UTILS / NEW / added function for merging siblings under one roof
+
+[33mcommit 654f117f85f79fa78d9856e5acd63568d7f038b0[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:51:22 2025 +0200
+
+    UTILS / Edited / now function wraps textNode
+
+[33mcommit 1017428f8d7db1c92e01e5ce6c8e568c048a38f3[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:50:57 2025 +0200
+
+    UTILS / new function for selection multiple elements
+
+[33mcommit c7344d0ddb01c2c58c91c6d9c99d23acfcb86304[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:50:32 2025 +0200
+
+    updated the utils function for restoring selection cursor
+
+[33mcommit a9a156893715f483b429087380402e33cebdd2cd[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:50:06 2025 +0200
+
+    changed config files that anyway changed nothing
+
+[33mcommit f2bf9f5d47152b51647c008ce3fad10a785b8d0b[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Tue Feb 18 00:49:33 2025 +0200
+
+    updated styles css
+
+[33mcommit 91876ad7b38fc663a7ec33fd340b2313f1f194e3[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 6 21:33:46 2025 +0200
+
+    stories fixed
+
+[33mcommit e0cb376ceff2313d694090c429d0152eca141898[m
+Author: ayPromise servant <fatherpother@gmail.com>
+Date:   Thu Feb 6 21:33:38 2025 +0200
+
+    control panel has 50% working bold toggle function
+
+[33mcommit b0c1cfca4e8d210b0fee
