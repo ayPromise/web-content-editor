@@ -1,18 +1,21 @@
 "use client"
 
 import { useTextSelection } from '@/context/TextSelectionContext';
+import useTextState from '@/hooks/useTextState';
 import { DragDropHorizontalIcon } from '@/icons';
 import getTextNode from '@/utils/getTextNode';
 import mergingSameClassesElements from '@/utils/mergingSameClassesElements';
 import restoreSelection from '@/utils/restoreSelection';
 import restoreSelectionForMultipleNodes from '@/utils/restoreSelectionForMultipleNodes';
+import splitHTMLElement from '@/utils/splitHTMLElement';
 import React, { useEffect, useRef, useState } from 'react'
 
 interface DropPositionProps {
     position: "before" | "after" | "between" | "inside",
     fromElement: Element | null,
     charIndex: number,
-    dropDirection?: "left" | "right"
+    dropDirection?: "left" | "right",
+    affectedNode?: Node | null
 }
 
 interface EditorProps {
@@ -23,6 +26,7 @@ interface EditorProps {
 const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
 
     const { handleTextSelect } = useTextSelection()
+    const { textHTML: textHTMLFromState } = useTextState()
 
     // ref на едітор для подальшого додавання елементів та івентів до нього
     const editorRef = useRef<HTMLDivElement>(null)
@@ -37,7 +41,7 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
         opacity: draggButtonVisible ? "1" : "0",
     };
 
-    const [dropPosition, setDropPosition] = useState<DropPositionProps>({ position: "before", fromElement: null, charIndex: 0, dropDirection: "right" })
+    const [dropPosition, setDropPosition] = useState<DropPositionProps>({ position: "before", fromElement: null, charIndex: 0, dropDirection: "right", directElement: null })
 
     const handleDraggStart = (e: DragEvent) => {
         const editor = editorRef.current
@@ -136,45 +140,52 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
 
     };
 
-    const getHoveredCharacter = (element: HTMLElement, mouseX: number, mouseY: number): { charIndex: number, direction: "left" | "right", xCoord: number } => {
+    const getHoveredCharacter = (element: HTMLElement, mouseX: number, mouseY: number) => {
         const range = document.createRange();
-        // var to store neccesary info about what characted and where to place the dragged text
-        const result: { charIndex: number, direction: "left" | "right", xCoord: number } = {
-            charIndex: 0, direction: "left", xCoord: 0
+        const result = {
+            charIndex: 0,
+            direction: "left" as "left" | "right",
+            xCoord: 0,
+            affectedNode: null as Node | null
         };
-        // check for containing the character
+
         let minDistance = Infinity;
-
-        // we retrieve all characters from text
-        const text = element.textContent;
-        if (!text) return result;
-
         const elementRect = element.getBoundingClientRect();
 
+        // get all text nodes
+        const textNodes: Text[] = [];
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
 
-        for (let i = 0; i < text.length; i++) {
-            // we check for exact character and ask for coords range of this character
-            range.setStart(element.firstChild!, i);
-            range.setEnd(element.firstChild!, i + 1);
+        while (walker.nextNode()) {
+            textNodes.push(walker.currentNode as Text);
+        }
 
-            // getting coords
-            const rect = range.getBoundingClientRect();
-            // asking if we did hover it
-            const distance = Math.abs(rect.left - mouseX) + Math.abs(rect.top - mouseY);
+        for (const textNode of textNodes) {
+            const text = textNode.textContent || "";
+            for (let i = 0; i < text.length; i++) {
+                range.setStart(textNode, i);
+                range.setEnd(textNode, i + 1);
+                const rect = range.getBoundingClientRect();
 
-            if (distance < minDistance) {
-                const middleOfCharacter = (rect.right + rect.left) / 2
-                minDistance = distance;
-                // store the index of character, where to place the character based on midLine and coords for ::after styling block
-                result.charIndex = i;
-                result.direction = middleOfCharacter - 2 < mouseX ? "right" : "left"
-                result.xCoord = middleOfCharacter - 2 < mouseX ? rect.right - elementRect.left - 3 : rect.left - elementRect.left - 3
+                // 2. Визначаємо найменшу відстань до символу
+                const distance = Math.abs(rect.left - mouseX) + Math.abs(rect.top - mouseY);
 
+                if (distance < minDistance) {
+                    const middleOfCharacter = (rect.right + rect.left) / 2;
+                    minDistance = distance;
+                    result.affectedNode = textNode
+                    result.charIndex = i;
+                    result.direction = middleOfCharacter < mouseX ? "right" : "left";
+                    result.xCoord = middleOfCharacter < mouseX
+                        ? rect.right - elementRect.left
+                        : rect.left - elementRect.left;
+                }
             }
         }
 
         return result;
     };
+
 
     const handleDraggOver = (event: DragEvent) => {
         event.preventDefault()
@@ -197,6 +208,12 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
         // if still we have no element or it is still editor we go back
         if (!hoveredElement || hoveredElement.id === "editor") return
 
+        while (hoveredElement?.parentElement?.id !== "editor") {
+            hoveredElement = hoveredElement?.parentElement
+        }
+
+
+
         // now we know that we did hover something and we clear styles on previous hovered element
         if (dropPosition.fromElement) {
             dropPosition.fromElement.classList.remove("add-before", "add-after", "add-between", "add-inside");
@@ -206,7 +223,7 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
         if (isTextDragged && hoveredElement instanceof HTMLElement) {
             const symbol = getHoveredCharacter(hoveredElement, mouseX, mouseY);
             if (!symbol) return
-            setDropPosition({ position: "inside", fromElement: hoveredElement, charIndex: symbol.charIndex, dropDirection: symbol.direction })
+            setDropPosition({ position: "inside", fromElement: hoveredElement, charIndex: symbol.charIndex, dropDirection: symbol.direction, affectedNode: symbol.affectedNode })
             hoveredElement.style.setProperty('--drop-left', `${symbol.xCoord}px`);
             hoveredElement.classList.add("add-inside")
             return
@@ -256,6 +273,7 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
     }
 
     const handleDrop = (event: DragEvent) => {
+
         event.preventDefault()
 
         // if we did not hover any element in #editor
@@ -268,7 +286,7 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
         const range = selection?.getRangeAt(0)
 
         // retrive data of selected TextNode and replace text in the drop place
-        const draggedText: string = event.dataTransfer.getData("selectedText")
+        const draggedText: string = event.dataTransfer?.getData("selectedText")
         const selectedNode: Node = selection?.getRangeAt(0).startContainer as Node
         let sameElementFlag: boolean = false
 
@@ -285,17 +303,38 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
                 ? dropPosition.charIndex
                 : dropPosition.charIndex + 1;
 
+            let splittedElement: HTMLElement
+            if (dropPosition.fromElement !== dropPosition.affectedNode?.parentElement) {
+                splittedElement = splitHTMLElement(dropPosition.affectedNode?.parentElement as HTMLElement, 0, insertIndex)
+            } else {
+                splittedElement = dropPosition.affectedNode.splitText(insertIndex)
+            }
+
+            const selectedElement = selectedNode.parentElement
+
+            const draggedTextElement = document.createElement(selectedElement.tagName)
+            draggedTextElement.textContent = draggedText
+
+            if (selectedElement.classList && selectedElement.classList.length > 0)
+                draggedTextElement.classList.add(...Array.from(selectedElement.classList))
+
             // place the dragged text into dropElement
-            if (dropPosition.fromElement.innerHTML === "<br>")
-                dropPosition.fromElement.innerHTML = draggedText
+            if (dropPosition.fromElement.innerHTML === "<br>") {
+                dropPosition.fromElement.innerHTML = ""
+                dropPosition.fromElement.appendChild(draggedTextElement)
+            }
             else {
-                dropPosition.fromElement.innerHTML = dropPosition.fromElement.innerHTML.toString().slice(0, insertIndex) + draggedText + dropPosition.fromElement.innerHTML.toString().slice(insertIndex)
+                if (splittedElement.nodeType === 3) {
+                    dropPosition.fromElement.insertBefore(draggedTextElement, splittedElement)
+                } else
+                    splittedElement.insertAdjacentElement("afterend", draggedTextElement)
             }
 
             // remove the dragged text from initial element 
             const parentElement = selectedNode.parentElement
             if (selectedNode.textContent && selectedNode !== dropPosition.fromElement) {
                 selectedNode.textContent = selectedNode.textContent.replace(draggedText, "")
+
             }
 
             // we cant leave the element empty so we put <br> into  
@@ -303,27 +342,8 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
                 parentElement.innerHTML = "<br>"
             }
 
-            // now we select the dropped text but in a new place
-            const newTextNode = dropPosition.fromElement.childNodes[0] as Text
-
-            // to remain selection if placing happens in itself
-            const nothingChanged = draggedText === dropPosition.fromElement.textContent;
-
-            // determine the start range based on different insertion cases
-            let startRange = insertIndex;
-
-            if (sameElementFlag && nothingChanged) {
-                // if we insert the whole text in itself
-                startRange = 0;
-            } else if (sameElementFlag) {
-                // 2 scenarios : partial self insert to the start and just inserting from foreign element  
-                const exceedsLength = insertIndex + draggedText.length > dropPosition.fromElement.textContent?.length;
-                startRange = exceedsLength ? insertIndex - draggedText.length : insertIndex;
-            }
-
-            const endRange = Math.min(insertIndex + draggedText.length, newTextNode.length);
-
-            restoreSelection(dropPosition.fromElement as HTMLElement, startRange, endRange)
+            range?.setStartBefore(draggedTextElement)
+            range?.setEndAfter(draggedTextElement)
 
 
             // we save changes in popped stated
@@ -399,6 +419,7 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
     }
 
     const handleTextDragStart = (event: DragEvent) => {
+
         if (!selection) return
 
         const selectedNode = selection.anchorNode;
@@ -407,6 +428,7 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
         // get the real start and end of selected text
         const start = Math.min(selection.anchorOffset, selection.focusOffset);
         const end = Math.max(selection.anchorOffset, selection.focusOffset);
+
 
         // grab only selected part
         const selectedText = selectedNode.textContent?.slice(start, end);
@@ -443,13 +465,15 @@ const Editor = ({ textHTML, handleTextChange }: EditorProps) => {
         let lastPlaceholderNode: HTMLElement | null = null;
 
         // if we initialized empty editor
-        if (editor && editor.childNodes.length === 0) {
+        if (!textHTMLFromState && editor && editor.childNodes.length === 0) {
             // we create paragraph with <br> to be able type in there
             const initialParagraph = document.createElement("p");
             initialParagraph.innerHTML = "<br>";
             initialParagraph.addEventListener("dragstart", handleTextDragStart)
             editor.appendChild(initialParagraph);
         }
+
+        editor?.addEventListener("dragstart", handleTextDragStart)
 
         const handleSelectionChange = () => {
 

@@ -5,7 +5,9 @@ const splitHTMLElement = (element: HTMLElement, startIndex: number, endIndex: nu
 
     const createElement = (content: string) => {
         const newElement = document.createElement(element.tagName);
-        newElement.classList.add(...Array.from(element.classList));
+        if(element.classList && element.classList.length > 0){
+            newElement.classList.add(...Array.from(element.classList));
+        }
         newElement.innerHTML = content;
         return newElement;
     };
